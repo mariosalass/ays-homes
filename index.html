@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AyS Soluciones Comerciales</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;font-size:18px}
+body{font-family:'Inter',sans-serif;color:#0f1923;background:#fff;-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+button,select,input,textarea{font-family:inherit}
+:root{
+  --teal:#1b5e6e;--teal-d:#134555;--teal-l:#e6f2f5;
+  --gold:#c08b2f;--gold-l:#faf3e8;
+  --text:#0f1923;--muted:#64748b;--border:#e2e8f0;--bg:#f8fafc;--white:#fff;
+  --r:14px;--r-sm:8px;--sh:0 4px 24px rgba(0,0,0,.07);--sh-md:0 8px 40px rgba(0,0,0,.12);
+  --wrap:1320px;
+}
+.page{display:none;min-height:100vh}
+.page.active{display:block}
+
+/* NAVBAR */
+#navbar{
+  position:fixed;top:0;left:0;right:0;z-index:200;height:72px;
+  padding:0 3rem;display:flex;align-items:center;justify-content:space-between;
+  background:transparent;border-bottom:1px solid transparent;
+  transition:background .35s,backdrop-filter .35s,border-color .35s;
+}
+#navbar.scrolled{background:rgba(255,255,255,.95);backdrop-filter:blur(16px);border-color:var(--border)}
+#navbar.dark .nav-link{color:rgba(255,255,255,.88)}
+#navbar.dark .nav-link:hover{color:#fff}
+#navbar.dark .nb-h1{color:#fff}
+#navbar.dark .nb-p{color:rgba(255,255,255,.55)}
+#navbar.scrolled .nav-link{color:var(--text)}
+#navbar.scrolled .nav-link:hover{color:var(--teal)}
+#navbar.scrolled .nb-h1{color:var(--text)}
+#navbar.scrolled .nb-p{color:var(--muted)}
+.nav-brand{display:flex;align-items:center;gap:12px;cursor:pointer}
+.nav-logo{width:44px;height:44px;background:var(--teal);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;flex-shrink:0}
+.nb-h1{font-size:16px;font-weight:700;line-height:1.1;transition:color .3s}
+.nb-p{font-size:12px;transition:color .3s}
+.nav-links{display:flex;align-items:center;gap:2.2rem}
+.nav-link{font-size:15px;font-weight:500;text-decoration:none;cursor:pointer;position:relative;padding:4px 0;transition:color .25s}
+.nav-link::after{content:'';position:absolute;bottom:-2px;left:0;width:0;height:2px;background:var(--gold);border-radius:2px;transition:width .25s}
+.nav-link:hover::after{width:100%}
+.nav-cta{background:var(--gold);color:#fff;padding:11px 24px;border-radius:9px;font-size:15px;font-weight:600;cursor:pointer;border:none;transition:background .2s,transform .15s,box-shadow .2s;box-shadow:0 2px 12px rgba(192,139,47,.3)}
+.nav-cta:hover{background:#a87526;transform:translateY(-1px)}
+
+/* HERO */
+.hero{position:relative;width:100%;height:100vh;min-height:700px;display:flex;align-items:center;overflow:hidden}
+.hero-bg{position:absolute;inset:0;z-index:0;background:url('https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=1600&q=85') center/cover no-repeat}
+.hero-overlay{position:absolute;inset:0;z-index:1;background:linear-gradient(105deg,rgba(19,69,85,.88) 0%,rgba(27,94,110,.70) 55%,rgba(27,94,110,.30) 100%)}
+.hero-content{position:relative;z-index:2;padding:0 6rem;max-width:820px;animation:fadeUp .7s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+.hero-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:rgba(255,255,255,.92);padding:7px 16px;border-radius:50px;font-size:14px;font-weight:500;margin-bottom:1.8rem;backdrop-filter:blur(4px)}
+.hero-pill span{width:8px;height:8px;background:var(--gold);border-radius:50%;display:block}
+.hero h1{font-size:clamp(2.6rem,5vw,3.8rem);font-weight:800;color:#fff;line-height:1.1;margin-bottom:1.3rem;letter-spacing:-.02em}
+.hero h1 em{color:var(--gold);font-style:normal}
+.hero p{color:rgba(255,255,255,.8);font-size:17px;line-height:1.75;margin-bottom:2.4rem;max-width:540px}
+.hero-btns{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:2.2rem}
+.btn-gold{background:var(--gold);color:#fff;padding:15px 26px;border-radius:11px;font-weight:600;font-size:15.5px;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:9px;transition:background .2s,transform .15s,box-shadow .2s;box-shadow:0 3px 14px rgba(192,139,47,.4)}
+.btn-gold:hover{background:#a87526;transform:translateY(-1px);box-shadow:0 6px 20px rgba(192,139,47,.45)}
+.btn-ghost{background:rgba(255,255,255,.12);color:#fff;padding:15px 26px;border-radius:11px;font-weight:600;font-size:15.5px;cursor:pointer;border:1.5px solid rgba(255,255,255,.35);display:inline-flex;align-items:center;gap:9px;backdrop-filter:blur(4px);transition:background .2s,border-color .2s,transform .15s}
+.btn-ghost:hover{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.6);transform:translateY(-1px)}
+.hero-links{display:flex;gap:2.2rem}
+.hero-link{color:rgba(255,255,255,.75);font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:color .2s;text-decoration:none}
+.hero-link:hover{color:#fff}
+.scroll-hint{position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);z-index:2;display:flex;flex-direction:column;align-items:center;gap:6px;color:rgba(255,255,255,.5);font-size:11px;letter-spacing:1px;text-transform:uppercase;animation:bob 2s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(5px)}}
+.scroll-hint i{font-size:16px}
+
+/* SECTIONS */
+.section{padding:6rem 2rem}
+.section-inner{max-width:var(--wrap);margin:0 auto}
+.s-bg{background:var(--bg)}
+.s-label{color:var(--gold);font-size:12px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:.8rem}
+.s-title{font-size:clamp(1.9rem,3vw,2.6rem);font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.s-sub{color:var(--muted);font-size:16.5px;line-height:1.7;margin-top:.6rem;max-width:600px}
+.tc{text-align:center}.tc .s-sub{margin-left:auto;margin-right:auto}
+
+/* SERVICE CARDS */
+.svc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.6rem;max-width:var(--wrap);margin:3rem auto 0}
+.svc-card{border-radius:var(--r);padding:2.6rem;border:1px solid var(--border);background:#fff;cursor:pointer;transition:transform .25s,box-shadow .25s;position:relative;overflow:hidden}
+.svc-card:hover{transform:translateY(-4px);box-shadow:var(--sh-md);border-color:transparent}
+.svc-ico{width:52px;height:52px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:1.4rem}
+.ico-b{background:#eff6ff;color:#2563eb}.ico-g{background:#f0fdf4;color:#16a34a}.ico-y{background:var(--gold-l);color:var(--gold)}.ico-p{background:#f5f3ff;color:#7c3aed}
+.svc-card h3{font-size:19px;font-weight:700;margin-bottom:.6rem}
+.svc-card p{color:var(--muted);font-size:15px;line-height:1.6;margin-bottom:1.3rem}
+.svc-list{list-style:none;margin-bottom:1.8rem}
+.svc-list li{font-size:15px;padding:5px 0;display:flex;align-items:center;gap:10px}
+.ck{width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px}
+.ck-b{background:#dbeafe;color:#2563eb}.ck-g{background:#dcfce7;color:#16a34a}.ck-y{background:#fef3c7;color:#d97706}.ck-p{background:#ede9fe;color:#7c3aed}
+.btn-text{display:inline-flex;align-items:center;gap:6px;font-size:15px;font-weight:600;cursor:pointer;background:none;border:none;color:var(--text);padding:0;transition:gap .2s,color .2s}
+.btn-text:hover{gap:10px;color:var(--teal)}
+
+/* ABOUT */
+.about-wrap{display:grid;grid-template-columns:1fr 1.15fr;gap:5rem;align-items:center;max-width:var(--wrap);margin:0 auto}
+.agent-photos{display:flex;gap:1.2rem}
+.agent-card{flex:1;border-radius:16px;overflow:hidden;position:relative;box-shadow:var(--sh-md);transition:transform .3s}
+.agent-card:hover{transform:translateY(-4px)}
+.agent-card img{width:100%;height:360px;object-fit:cover;display:block}
+.agent-lbl{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.72));padding:2rem 1.2rem 1.2rem;color:#fff}
+.agent-lbl h4{font-size:16px;font-weight:700}
+.agent-lbl p{font-size:13px;opacity:.8}
+.about-text .s-title{text-align:left}
+.about-text .s-sub{text-align:left;margin-left:0;max-width:100%}
+.about-text p{color:var(--muted);font-size:15.5px;line-height:1.75;margin-top:1rem}
+.about-text p strong{color:var(--text)}
+.avals{display:flex;gap:2rem;margin:2rem 0}
+.av{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px}
+.av-icon{width:48px;height:48px;border-radius:12px;background:var(--teal-l);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:20px}
+.av h4{font-size:14px;font-weight:700;color:var(--teal)}
+.av p{font-size:13px;color:var(--muted);line-height:1.4}
+.btn-teal{background:var(--teal);color:#fff;padding:13px 26px;border-radius:10px;font-size:15.5px;font-weight:600;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:9px;transition:background .2s,transform .15s}
+.btn-teal:hover{background:var(--teal-d);transform:translateY(-1px)}
+
+/* CTA */
+.cta-band{background:linear-gradient(120deg,var(--teal-d),var(--teal) 60%,#226378);padding:6rem 2rem;text-align:center;position:relative;overflow:hidden}
+.cta-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:rgba(255,255,255,.9);padding:6px 15px;border-radius:50px;font-size:13px;font-weight:500;margin-bottom:1.5rem}
+.cta-band h2{font-size:clamp(2rem,3vw,2.9rem);font-weight:800;color:#fff;margin-bottom:1rem;letter-spacing:-.02em;max-width:800px;margin-left:auto;margin-right:auto}
+.cta-band>p{color:rgba(255,255,255,.72);font-size:17px;margin-bottom:2.2rem}
+.cta-btns{display:flex;gap:14px;justify-content:center;margin-bottom:1.8rem}
+.btn-wapp{background:rgba(255,255,255,.1);color:#fff;padding:14px 26px;border-radius:11px;font-size:15.5px;font-weight:600;cursor:pointer;border:1.5px solid rgba(255,255,255,.3);display:inline-flex;align-items:center;gap:9px;backdrop-filter:blur(6px);transition:background .2s,border-color .2s,transform .15s}
+.btn-wapp:hover{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.6);transform:translateY(-1px)}
+.cta-pills{display:flex;gap:2.5rem;justify-content:center}
+.cta-pill{color:rgba(255,255,255,.65);font-size:14px;display:flex;align-items:center;gap:8px}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.dg{background:#4ade80}.dgo{background:var(--gold)}.db{background:#60a5fa}
+
+/* SOCIAL BAR */
+.soc-bar{background:var(--teal-d);padding:1rem 3rem;display:flex;align-items:center;justify-content:center;gap:3rem}
+.soc-bar p{color:rgba(255,255,255,.65);font-size:14px}
+.s-icons{display:flex;gap:10px}
+.s-ico{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.1);color:#fff;font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s,transform .2s;text-decoration:none}
+.s-ico:hover{background:rgba(255,255,255,.22);transform:scale(1.1)}
+
+/* FOOTER */
+footer{background:var(--teal-d);padding:4rem 3rem 3rem;display:grid;grid-template-columns:1.6fr 1fr 1fr 1.3fr;gap:3rem;border-top:1px solid rgba(255,255,255,.07)}
+.fb-p{color:rgba(255,255,255,.55);font-size:14px;line-height:1.7;margin-top:.8rem}
+footer h5{color:rgba(255,255,255,.5);font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:1rem}
+footer ul{list-style:none}
+footer ul li{margin-bottom:10px}
+footer ul li a{color:rgba(255,255,255,.65);font-size:14.5px;text-decoration:none;cursor:pointer;transition:color .2s}
+footer ul li a:hover{color:#fff}
+.fci{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
+.fci i{color:var(--gold);font-size:14px;margin-top:3px;width:16px}
+.fci p{color:rgba(255,255,255,.65);font-size:14px;line-height:1.5}
+.fci span{color:rgba(255,255,255,.4);font-size:12px}
+.foot-bot{background:var(--teal-d);padding:1rem 3rem 1.4rem;border-top:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.35);font-size:13px;text-align:center}
+
+/* PAGE HERO */
+.pg-hero{background:linear-gradient(120deg,var(--teal-d),var(--teal));padding:6rem 2rem 4rem;margin-top:72px;text-align:center}
+.pg-icon{font-size:36px;color:var(--gold);margin-bottom:1.2rem}
+.pg-hero h1{font-size:clamp(2rem,3.5vw,3rem);font-weight:800;color:#fff;margin-bottom:.6rem;letter-spacing:-.02em}
+.pg-hero p{color:rgba(255,255,255,.75);font-size:16.5px}
+
+/* FILTERS */
+.filters{background:#fff;padding:1.6rem 2rem;border-bottom:1px solid var(--border);position:sticky;top:72px;z-index:10;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.filter-top{max-width:var(--wrap);margin:0 auto;display:flex;align-items:center;gap:1rem}
+.sw{position:relative;flex:1}
+.sw input{width:100%;padding:12px 16px 12px 46px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s;background:var(--bg)}
+.sw input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(27,94,110,.08);background:#fff}
+.sw i{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px}
+.filter-toggle{display:flex;align-items:center;gap:8px;padding:12px 18px;border:1.5px solid var(--border);border-radius:10px;background:#fff;font-size:14.5px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.filter-toggle:hover{border-color:var(--teal);color:var(--teal)}
+.filter-toggle.active{border-color:var(--teal);color:var(--teal);background:var(--teal-l)}
+.filter-panel{max-width:var(--wrap);margin:0 auto;overflow:hidden;max-height:0;transition:max-height .35s ease,padding .35s ease}
+.filter-panel.open{max-height:300px;padding-top:1.2rem}
+.fg-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+.fg label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600;letter-spacing:.3px}
+.fg select,.fg input{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;color:var(--text);background:#fff;outline:none;transition:border-color .2s}
+.fg select:focus,.fg input:focus{border-color:var(--teal)}
+.clr-btn{color:var(--muted);font-size:13.5px;cursor:pointer;margin-top:.8rem;display:inline-flex;align-items:center;gap:6px;background:none;border:none;transition:color .2s}
+.clr-btn:hover{color:var(--text)}
+
+/* LISTINGS */
+.listings{padding:3rem 2rem 5rem}
+.listings-inner{max-width:var(--wrap);margin:0 auto}
+.rc{font-size:15px;color:var(--muted);margin-bottom:1.8rem}
+.rc strong{color:var(--text)}
+.prop-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.6rem}
+
+/* PROP CARD */
+.pcard{background:#fff;border-radius:16px;overflow:hidden;border:1px solid var(--border);transition:transform .25s,box-shadow .25s}
+.pcard:hover{transform:translateY(-5px);box-shadow:var(--sh-md);border-color:transparent}
+.pimg{position:relative;height:230px;overflow:hidden;cursor:pointer}
+.pimg img{width:100%;height:100%;object-fit:cover;transition:transform .45s ease}
+.pcard:hover .pimg img{transform:scale(1.06)}
+.gal-badge{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);color:#fff;font-size:13px;font-weight:600;padding:5px 11px;border-radius:7px;display:flex;align-items:center;gap:6px;pointer-events:none}
+.pbadges{position:absolute;top:10px;left:10px;display:flex;gap:6px}
+.badge{padding:5px 12px;border-radius:7px;font-size:12px;font-weight:700;letter-spacing:.3px}
+.b-sale{background:var(--teal);color:#fff}.b-rent{background:var(--gold);color:#fff}.b-feat{background:rgba(255,255,255,.9);color:var(--text)}.b-yr{background:var(--teal);color:#fff}
+.pbody{padding:1.5rem}
+.ptype{font-size:12px;color:var(--teal);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.pname{font-size:18px;font-weight:700;margin-bottom:5px;line-height:1.3}
+.ploc{color:var(--muted);font-size:14px;display:flex;align-items:center;gap:5px;margin-bottom:12px}
+.pprice{font-size:22px;font-weight:800;color:var(--teal);margin-bottom:12px}
+.pprice span{font-size:14px;font-weight:400;color:var(--muted)}
+.pspecs{display:flex;gap:1.3rem;margin-bottom:1.3rem}
+.pspec{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.pacts{display:flex;gap:8px}
+.btn-view{flex:1;padding:11px 0;border-radius:9px;border:1.5px solid var(--border);font-size:14.5px;font-weight:600;cursor:pointer;background:#fff;color:var(--text);transition:all .2s}
+.btn-view:hover{background:var(--teal);color:#fff;border-color:var(--teal)}
+.btn-save{width:42px;height:42px;border-radius:9px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;background:#fff;color:var(--muted);font-size:16px;transition:all .2s;flex-shrink:0}
+.btn-save:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-l)}
+
+/* DETAIL */
+.det-page{margin-top:72px}
+.gal-hero{position:relative;height:480px;overflow:hidden;cursor:pointer;background:#111}
+.gal-hero img{width:100%;height:100%;object-fit:cover;transition:transform .4s ease}
+.gal-hero:hover img{transform:scale(1.02)}
+.gal-ctr{position:absolute;bottom:18px;right:18px;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);color:#fff;font-size:14px;font-weight:600;padding:8px 16px;border-radius:10px;display:flex;align-items:center;gap:8px;pointer-events:none}
+.det-badge{position:absolute;top:18px;left:18px}
+.det-layout{display:grid;grid-template-columns:1fr 400px;gap:2.5rem;padding:3rem;align-items:start;max-width:var(--wrap);margin:0 auto}
+.det-type{font-size:12px;color:var(--gold);font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
+.det-title{font-size:2.4rem;font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
+.det-loc{color:var(--muted);font-size:16px;display:flex;align-items:center;gap:6px;margin-bottom:1.4rem}
+.det-price{font-size:2.6rem;font-weight:800;color:var(--text);margin-bottom:2rem}
+.det-price span{font-size:16px;font-weight:400;color:var(--muted)}
+.ibox{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:2rem;margin-bottom:1.6rem}
+.ibox h3{font-size:17px;font-weight:700;margin-bottom:1.4rem}
+.specs-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+.spec-i{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
+.spec-i i{color:var(--teal);font-size:22px}
+.spec-i .sv{font-weight:700;font-size:17px}
+.spec-i .sl{font-size:13px;color:var(--muted)}
+.am-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.amrow{display:flex;align-items:center;gap:9px;font-size:15px}
+.amrow i{color:var(--teal);font-size:14px}
+.fcard{background:var(--teal);border-radius:18px;padding:2rem;position:sticky;top:88px}
+.fcard h3{color:#fff;font-size:19px;font-weight:700;margin-bottom:1.5rem;display:flex;align-items:center;gap:9px}
+.fi{width:100%;padding:13px 16px;border-radius:10px;border:none;background:rgba(255,255,255,.9);font-size:15px;color:var(--text);margin-bottom:12px;outline:none;transition:background .2s}
+.fi::placeholder{color:#9ca3af}
+.fi:focus{background:#fff}
+.fita{resize:vertical;min-height:90px}
+.btn-fm{width:100%;padding:14px;background:var(--gold);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:16px;cursor:pointer;margin-bottom:12px;transition:background .2s,transform .15s}
+.btn-fm:hover{background:#a87526;transform:translateY(-1px)}
+.btn-fwa{width:100%;padding:12px;background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.4);border-radius:10px;font-size:14.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .2s,border-color .2s}
+.btn-fwa:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.7)}
+
+/* LIGHTBOX - flechas al lado de la imagen, bien visibles en móvil */
+#lb{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.95);display:none;flex-direction:column;align-items:center;justify-content:center}
+#lb.open{display:flex;animation:lbi .2s ease}
+@keyframes lbi{from{opacity:0}to{opacity:1}}
+.lb-topbar{width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;flex-shrink:0}
+.lb-counter-top{color:rgba(255,255,255,.85);font-size:16px;font-weight:600}
+.lb-cl{color:#fff;cursor:pointer;background:rgba(255,255,255,.15);border:none;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;transition:background .2s}
+.lb-cl:hover{background:rgba(255,255,255,.3)}
+.lb-main{flex:1;display:flex;align-items:center;justify-content:center;gap:16px;width:100%;padding:0 12px;min-height:0}
+.lb-img{max-height:72vh;max-width:78vw;object-fit:contain;border-radius:8px;display:block}
+.lb-arr{color:#fff;cursor:pointer;background:rgba(255,255,255,.15);border:none;width:52px;height:52px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;transition:background .2s}
+.lb-arr:hover{background:rgba(255,255,255,.3)}
+.lb-thumbs{display:flex;gap:8px;padding:14px 20px;max-width:100vw;overflow-x:auto;flex-shrink:0}
+.lb-th{width:60px;height:44px;border-radius:6px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:border-color .2s,opacity .2s;opacity:.5;flex-shrink:0}
+.lb-th.active{border-color:#fff;opacity:1}
+.lb-th img{width:100%;height:100%;object-fit:cover}
+
+/* CREDITS */
+.cr-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;max-width:var(--wrap);margin:2.5rem auto 3rem}
+.crc{background:#fff;border-radius:var(--r);border:1px solid var(--border);padding:2.5rem}
+.cr-ico{width:54px;height:54px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:1.4rem}
+.ciy{background:var(--gold-l);color:var(--gold)}.cib{background:#eff6ff;color:#2563eb}
+.crc h3{font-size:20px;font-weight:700;color:var(--teal);margin-bottom:.8rem}
+.al-b{background:#fffbeb;border:1px solid #fde68a;border-radius:9px;padding:13px 16px;font-size:14px;color:#92400e;margin-bottom:1.3rem}
+.al-b strong{color:#b45309}
+.crc h4{font-size:15px;font-weight:700;margin-bottom:9px}
+.cr-ul{list-style:none;margin-bottom:1.1rem}
+.cr-ul li{font-size:14.5px;padding:5px 0;display:flex;align-items:center;gap:9px}
+.cr-ul li i{color:var(--teal);font-size:13px}
+.in-bl{background:#eff6ff;border-radius:9px;padding:14px 16px;font-size:14px;color:#1e40af;display:flex;align-items:flex-start;gap:10px}
+.gt-b{background:var(--bg);border-radius:9px;padding:14px 16px;font-size:14px;color:var(--muted);display:flex;align-items:flex-start;gap:10px;margin-top:1.1rem}
+
+/* MANAGEMENT */
+.cm-bar{background:var(--gold);padding:1.1rem 3rem;text-align:center}
+.cm-bar p{color:#fff;font-size:16px}
+.cm-bar strong{font-weight:800}
+.mg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.6rem;max-width:var(--wrap);margin:0 auto 2.5rem}
+.mgc{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:2.2rem;transition:transform .25s,box-shadow .25s}
+.mgc:hover{transform:translateY(-3px);box-shadow:var(--sh)}
+.mg-ico{width:50px;height:50px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;background:var(--teal-l);color:var(--teal);margin-bottom:1.2rem}
+.mgc h3{font-size:18px;font-weight:700;color:var(--teal);margin-bottom:6px}
+.mgc>p{font-size:15px;color:var(--muted);margin-bottom:1.1rem}
+.mgc ul{list-style:none}
+.mgc ul li{font-size:14.5px;padding:5px 0;display:flex;align-items:center;gap:9px}
+.mgc ul li i{color:var(--teal);font-size:12px}
+.why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem;max-width:var(--wrap);margin:0 auto 3rem}
+.wi{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:13px;padding:1.8rem 1.2rem;text-align:center;color:#fff;transition:background .2s}
+.wi:hover{background:rgba(255,255,255,.17)}
+.wi i{font-size:30px;color:var(--gold);display:block;margin-bottom:.9rem}
+.wi p{font-size:14.5px;opacity:.85;line-height:1.5}
+
+/* ABOUT */
+.vg{display:grid;grid-template-columns:repeat(3,1fr);gap:1.6rem;max-width:var(--wrap);margin:2.5rem auto 0}
+.vc{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:2.2rem;text-align:center;transition:transform .25s,box-shadow .25s}
+.vc:hover{transform:translateY(-3px);box-shadow:var(--sh)}
+.vc i{font-size:32px;color:var(--teal);margin-bottom:1.1rem}
+.vc h3{font-size:18px;font-weight:700;margin-bottom:7px}
+.vc p{font-size:15px;color:var(--muted);line-height:1.65}
+.tg{display:grid;grid-template-columns:repeat(3,1fr);gap:1.6rem;max-width:var(--wrap);margin:2.5rem auto 0}
+.tc2{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:2.2rem;transition:transform .25s,box-shadow .25s}
+.tc2:hover{transform:translateY(-3px);box-shadow:var(--sh)}
+.qm{color:var(--gold);font-size:28px;margin-bottom:1rem}
+.tc2 p{font-style:italic;font-size:15px;color:var(--text);line-height:1.75;margin-bottom:1.3rem}
+.ta-name h4{font-size:15px;font-weight:700}
+.ta-name span{font-size:13px;color:var(--gold);font-weight:500}
+.cb{background:var(--gold-l);border-radius:12px;padding:1.6rem;margin-top:1.5rem}
+.cb h4{font-size:15px;font-weight:700;color:var(--gold);margin-bottom:6px}
+.cb p{font-size:15px;color:var(--text);line-height:1.7}
+
+/* CONTACT */
+.ct-wrap{display:grid;grid-template-columns:1fr 1.5fr;gap:3rem;padding:4rem 3rem;max-width:var(--wrap);margin:0 auto}
+.ci{background:#fff;border:1px solid var(--border);border-radius:13px;padding:1.4rem 1.8rem;display:flex;align-items:flex-start;gap:16px;margin-bottom:1.1rem;transition:box-shadow .2s}
+.ci:hover{box-shadow:var(--sh)}
+.ci-ic{width:46px;height:46px;border-radius:11px;background:var(--teal-l);display:flex;align-items:center;justify-content:center;color:var(--teal);font-size:17px;flex-shrink:0}
+.ci h4{font-size:15.5px;font-weight:700;margin-bottom:4px}
+.ci p{font-size:15px;color:var(--teal);font-weight:600}
+.ci span{font-size:13px;color:var(--muted)}
+.sc{background:#fff;border:1px solid var(--border);border-radius:13px;padding:1.4rem 1.8rem;margin-top:1.1rem}
+.sc h4{font-size:14px;font-weight:700;color:var(--teal);margin-bottom:6px}
+.sc p{font-size:13.5px;color:var(--muted);margin-bottom:12px}
+.sc-btns{display:flex;gap:10px}
+.sc-btn{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;cursor:pointer;text-decoration:none;transition:transform .2s,opacity .2s}
+.sc-btn:hover{transform:scale(1.1)}
+.sc-btn.ig{background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)}
+.sc-btn.fb{background:#1877f2}.sc-btn.tk{background:#000}
+.cfb{background:#fff;border:1px solid var(--border);border-radius:16px;padding:2.5rem}
+.cfb h3{font-size:22px;font-weight:700;margin-bottom:5px}
+.cfb>p{font-size:14.5px;color:var(--teal);margin-bottom:1.8rem;font-weight:500}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+.ff label{display:block;font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px}
+.ff label span{color:var(--gold)}
+.ff input,.ff select,.ff textarea{width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:9px;font-size:15px;color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s}
+.ff input:focus,.ff select:focus,.ff textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(27,94,110,.07)}
+.ff textarea{resize:vertical;min-height:110px}
+.btn-send{width:100%;padding:15px;background:var(--gold);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:background .2s,transform .15s}
+.btn-send:hover{background:#a87526;transform:translateY(-1px)}
+.wa-sec{background:#f0fdf4;border-radius:16px;padding:3.5rem;text-align:center;max-width:var(--wrap);margin:0 auto 4rem}
+.wa-ico{width:66px;height:66px;background:#22c55e;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;margin:0 auto 1.2rem}
+.wa-sec h3{font-size:23px;font-weight:800;margin-bottom:6px}
+.wa-sec p{color:var(--muted);font-size:15.5px;margin-bottom:1.6rem}
+.btn-wa{background:#22c55e;color:#fff;padding:15px 32px;border-radius:11px;font-weight:700;font-size:16.5px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:10px;transition:background .2s,transform .15s}
+.btn-wa:hover{background:#16a34a;transform:translateY(-1px)}
+
+/* FORM PANEL */
+.fp{max-width:660px;margin:0 auto;background:#fff;border-radius:18px;padding:3rem;border:1px solid var(--border)}
+.fp h3{text-align:center;font-size:1.7rem;font-weight:800;margin-bottom:6px;letter-spacing:-.02em}
+.fp>p{text-align:center;color:var(--teal);font-size:15px;margin-bottom:1.8rem;font-weight:500}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav id="navbar" class="dark">
+  <div class="nav-brand" onclick="go('home')">
+    <div class="nav-logo">AyS</div>
+    <div><p class="nb-h1">AyS Soluciones</p><p class="nb-p">Comerciales</p></div>
+  </div>
+  <div class="nav-links">
+    <a class="nav-link" onclick="go('home')">Inicio</a>
+    <a class="nav-link" onclick="go('properties')">Propiedades</a>
+    <a class="nav-link" onclick="go('cars')">Autos</a>
+    <a class="nav-link" onclick="go('credits')">Créditos</a>
+    <a class="nav-link" onclick="go('management')">Gestión</a>
+    <a class="nav-link" onclick="go('about')">Nosotros</a>
+    <a class="nav-link" onclick="go('contact')">Contacto</a>
+  </div>
+  <button class="nav-cta" onclick="go('contact')">Contáctanos</button>
+</nav>
+
+<!-- ===== HOME ===== -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <div class="hero-pill"><span></span>Adrián Salas &amp; Susy Bazo · Agentes Inmobiliarios</div>
+      <h1>Encontrá tu propiedad ideal, tu próximo auto o la <em>solución de financiamiento</em> que necesitás</h1>
+      <p>Venta y alquiler de propiedades, venta de autos, créditos con prestamistas privados y créditos/planes maduros del INVU.</p>
+      <div class="hero-btns">
+        <button class="btn-gold" onclick="go('properties')"><i class="fas fa-building"></i> Ver propiedades</button>
+        <button class="btn-ghost" onclick="go('cars')"><i class="fas fa-car"></i> Ver autos</button>
+        <button class="btn-ghost" onclick="go('credits')"><i class="fas fa-credit-card"></i> Créditos</button>
+      </div>
+      <div class="hero-links">
+        <a class="hero-link" onclick="go('management')"><i class="fas fa-calendar-plus"></i> Agendar visita →</a>
+        <a class="hero-link" onclick="go('management')"><i class="fas fa-briefcase"></i> Gestión de activos →</a>
+      </div>
+    </div>
+    <div class="scroll-hint"><i class="fas fa-chevron-down"></i><span>Scroll</span></div>
+  </div>
+
+  <div class="section s-bg">
+    <div class="section-inner">
+      <div class="tc"><p class="s-label">Nuestros servicios</p><h2 class="s-title">Soluciones integrales para tus necesidades</h2><p class="s-sub">Ofrecemos un acompañamiento completo en cada una de nuestras áreas de servicio</p></div>
+      <div class="svc-grid">
+        <div class="svc-card" onclick="go('properties')"><div class="svc-ico ico-b"><i class="fas fa-building"></i></div><h3>Propiedades</h3><p>Venta y alquiler de casas, apartamentos, oficinas, locales, terrenos y más.</p><ul class="svc-list"><li><span class="ck ck-b"><i class="fas fa-check"></i></span>Casas y apartamentos</li><li><span class="ck ck-b"><i class="fas fa-check"></i></span>Locales comerciales</li><li><span class="ck ck-b"><i class="fas fa-check"></i></span>Terrenos</li><li><span class="ck ck-b"><i class="fas fa-check"></i></span>Oficinas y bodegas</li></ul><button class="btn-text">Ver propiedades <i class="fas fa-arrow-right"></i></button></div>
+        <div class="svc-card" onclick="go('cars')"><div class="svc-ico ico-g"><i class="fas fa-car"></i></div><h3>Autos en venta</h3><p>Encontrá el vehículo perfecto. Te ayudamos con todo el proceso de compra.</p><ul class="svc-list"><li><span class="ck ck-g"><i class="fas fa-check"></i></span>Autos seminuevos</li><li><span class="ck ck-g"><i class="fas fa-check"></i></span>Variedad de marcas</li><li><span class="ck ck-g"><i class="fas fa-check"></i></span>Asesoría completa</li><li><span class="ck ck-g"><i class="fas fa-check"></i></span>Pruebas de manejo</li></ul><button class="btn-text">Ver autos <i class="fas fa-arrow-right"></i></button></div>
+        <div class="svc-card" onclick="go('credits')"><div class="svc-ico ico-y"><i class="fas fa-credit-card"></i></div><h3>Créditos y Financiamiento</h3><p>Créditos con prestamistas privados y asesoría en planes maduros del INVU.</p><ul class="svc-list"><li><span class="ck ck-y"><i class="fas fa-check"></i></span>Prestamistas privados</li><li><span class="ck ck-y"><i class="fas fa-check"></i></span>Garantía hipotecaria</li><li><span class="ck ck-y"><i class="fas fa-check"></i></span>Planes INVU</li><li><span class="ck ck-y"><i class="fas fa-check"></i></span>Sin bancos</li></ul><button class="btn-text">Ver opciones <i class="fas fa-arrow-right"></i></button></div>
+        <div class="svc-card" onclick="go('management')"><div class="svc-ico ico-p"><i class="fas fa-briefcase"></i></div><h3>Gestión de Activos</h3><p>Manejamos tu propiedad, vehículo o crédito INVU para que no te preocupes.</p><ul class="svc-list"><li><span class="ck ck-p"><i class="fas fa-check"></i></span>Publicación y promoción</li><li><span class="ck ck-p"><i class="fas fa-check"></i></span>Atención de interesados</li><li><span class="ck ck-p"><i class="fas fa-check"></i></span>Coordinación de visitas</li><li><span class="ck ck-p"><i class="fas fa-check"></i></span>Gestión completa</li></ul><button class="btn-text">Más información <i class="fas fa-arrow-right"></i></button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-inner">
+      <div class="about-wrap">
+        <div class="agent-photos">
+          <div class="agent-card"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&q=80" alt="Adrián"><div class="agent-lbl"><h4>Adrián Salas</h4><p>Agente Inmobiliario</p></div></div>
+          <div class="agent-card"><img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=500&q=80" alt="Susy"><div class="agent-lbl"><h4>Susy Bazo</h4><p>Agente Inmobiliaria</p></div></div>
+        </div>
+        <div class="about-text">
+          <p class="s-label">Quiénes somos</p>
+          <h2 class="s-title">Tu socio de confianza en soluciones comerciales</h2>
+          <p><strong>AyS Soluciones Comerciales</strong> es una empresa fundada por Adrián Salas y Susy Bazo, agentes inmobiliarios comprometidos con ayudar a personas a comprar, vender y alquilar propiedades, vender autos y conseguir soluciones de financiamiento.</p>
+          <p>Trabajamos a comisión, generalmente alrededor del <strong>5% del valor de la operación</strong>, acompañándote en todo el proceso.</p>
+          <div class="avals">
+            <div class="av"><div class="av-icon"><i class="fas fa-shield-halved"></i></div><h4>Confianza</h4><p>Transparencia en cada transacción</p></div>
+            <div class="av"><div class="av-icon"><i class="fas fa-users"></i></div><h4>Experiencia</h4><p>Años en el mercado</p></div>
+            <div class="av"><div class="av-icon"><i class="fas fa-heart"></i></div><h4>Acompañamiento</h4><p>Cada paso del proceso</p></div>
+          </div>
+          <button class="btn-teal" onclick="go('about')">Conocer más sobre nosotros <i class="fas fa-arrow-right"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta-band">
+    <div class="cta-badge">¿Listo para empezar?</div>
+    <h2>Estamos aquí para ayudarte a encontrar la mejor solución</h2>
+    <p>Agenda una visita, solicita información o cuéntanos qué necesitás.</p>
+    <div class="cta-btns">
+      <button class="btn-gold" onclick="go('contact')"><i class="fas fa-calendar"></i> Agendar una cita</button>
+      <button class="btn-wapp"><i class="fab fa-whatsapp"></i> Hablar por WhatsApp</button>
+    </div>
+    <div class="cta-pills">
+      <span class="cta-pill"><span class="dot dg"></span>Respuesta en menos de 24 horas</span>
+      <span class="cta-pill"><span class="dot dgo"></span>Sin compromiso</span>
+      <span class="cta-pill"><span class="dot db"></span>Asesoría gratuita inicial</span>
+    </div>
+  </div>
+
+  <div class="soc-bar"><p>Publicamos propiedades, autos y oportunidades de crédito todos los días. ¡Síguenos!</p><div class="s-icons"><a class="s-ico" href="#"><i class="fab fa-instagram"></i></a><a class="s-ico" href="#"><i class="fab fa-facebook"></i></a><a class="s-ico" href="#"><i class="fab fa-tiktok"></i></a></div></div>
+  <footer>
+    <div><div class="nav-brand" style="margin-bottom:.8rem" onclick="go('home')"><div class="nav-logo">AyS</div><div><p class="nb-h1" style="color:#fff">AyS Soluciones</p><p class="nb-p" style="color:rgba(255,255,255,.45)">Comerciales</p></div></div><p class="fb-p">Adrián Salas y Susy Bazo, agentes inmobiliarios comprometidos con ayudarte a encontrar la mejor solución.</p></div>
+    <div><h5>Servicios</h5><ul><li><a onclick="go('properties')">Propiedades en venta</a></li><li><a onclick="go('properties')">Propiedades en alquiler</a></li><li><a onclick="go('cars')">Autos en venta</a></li><li><a onclick="go('credits')">Créditos y financiamiento</a></li></ul></div>
+    <div><h5>Enlaces</h5><ul><li><a onclick="go('home')">Inicio</a></li><li><a onclick="go('about')">Sobre nosotros</a></li><li><a onclick="go('contact')">Contacto</a></li></ul></div>
+    <div><h5>Contacto</h5>
+      <div class="fci"><i class="fas fa-phone"></i><div><p>+506 8572-5465</p><p>+506 8321-5948</p><span>WhatsApp disponible</span></div></div>
+      <div class="fci"><i class="fas fa-envelope"></i><div><p>info@ays.homes</p></div></div>
+      <div class="fci"><i class="fas fa-clock"></i><div><p>Lun - Vie: 8:00 - 18:00</p><span>Sáb: 9:00 - 13:00</span></div></div>
+    </div>
+  </footer>
+  <div class="foot-bot">© 2025 AyS Soluciones Comerciales · Todos los derechos reservados</div>
+</div>
+
+<!-- ===== PROPERTIES ===== -->
+<div class="page" id="page-properties">
+  <div class="pg-hero"><div class="pg-icon"><i class="fas fa-building"></i></div><h1>Propiedades en Venta y Alquiler</h1><p>Explorá nuestra selección de casas, apartamentos, locales, oficinas y terrenos</p></div>
+  <div class="filters">
+    <div class="filter-top">
+      <div class="sw"><i class="fas fa-search"></i><input type="text" placeholder="Buscar por ubicación, título..."></div>
+      <button class="filter-toggle" id="ftoggle-props" onclick="toggleFilters('props')"><i class="fas fa-sliders"></i> Más filtros</button>
+    </div>
+    <div class="filter-panel" id="fpanel-props">
+      <div class="fg-grid">
+        <div class="fg"><label>Transacción</label><select><option>Todas</option><option>Venta</option><option>Alquiler</option></select></div>
+        <div class="fg"><label>Tipo</label><select><option>Todas</option><option>Casa</option><option>Apartamento</option><option>Local</option><option>Terreno</option></select></div>
+        <div class="fg"><label>Provincia</label><select><option>Todas</option><option>San José</option><option>Alajuela</option><option>Heredia</option><option>Guanacaste</option></select></div>
+        <div class="fg"><label>Habitaciones</label><select><option>Todas</option><option>1</option><option>2</option><option>3</option><option>4+</option></select></div>
+        <div class="fg"><label>Baños</label><select><option>Todos</option><option>1</option><option>2</option><option>3+</option></select></div>
+        <div class="fg"><label>Parqueos</label><select><option>Todos</option><option>1</option><option>2</option><option>3+</option></select></div>
+        <div class="fg"><label>Precio mín</label><input type="text" placeholder="$0"></div>
+        <div class="fg"><label>Precio máx</label><input type="text" placeholder="Sin límite"></div>
+      </div>
+      <button class="clr-btn">✕ Limpiar filtros</button>
+    </div>
+  </div>
+  <div class="listings">
+    <div class="listings-inner">
+      <p class="rc" id="props-count"></p>
+      <div class="prop-grid" id="props-grid">
+        <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted)"><div style="width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem"></div><p>Cargando propiedades...</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="soc-bar"><p>Publicamos todos los días. ¡Síguenos!</p><div class="s-icons"><a class="s-ico" href="#"><i class="fab fa-instagram"></i></a><a class="s-ico" href="#"><i class="fab fa-facebook"></i></a><a class="s-ico" href="#"><i class="fab fa-tiktok"></i></a></div></div>
+</div>
+
+<!-- ===== PROPERTY DETAIL ===== -->
+<div class="page" id="page-propertyDetail">
+  <div class="det-page">
+    <div class="gal-hero" onclick="openLb(event,PI1,0)">
+      <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1400&q=85" alt="">
+      <div class="gal-ctr"><i class="fas fa-images"></i> 1 / 4 · Click para galería completa</div>
+      <div class="det-badge"><span class="badge b-rent">Alquiler</span></div>
+    </div>
+    <div class="det-layout">
+      <div>
+        <p class="det-type">Local comercial</p>
+        <h1 class="det-title">Local Comercial en Santa Ana</h1>
+        <p class="det-loc"><i class="fas fa-location-dot"></i> Forum Santa Ana, San José</p>
+        <p class="det-price">$2,500 <span>/mes</span></p>
+        <div class="ibox"><h3>Características</h3><div class="specs-row"><div class="spec-i"><i class="fas fa-expand-arrows-alt"></i><span class="sv">120 m²</span><span class="sl">Construcción</span></div><div class="spec-i"><i class="fas fa-car"></i><span class="sv">4</span><span class="sl">Parqueos</span></div></div></div>
+        <div class="ibox"><h3>Descripción</h3><p style="font-size:14.5px;color:var(--teal);line-height:1.75">Local comercial en plaza de alto tráfico. Ideal para restaurante, café o tienda. Incluye parqueos para clientes. Excelente visibilidad desde la calle principal.</p></div>
+        <div class="ibox"><h3>Amenidades</h3><div class="am-grid"><div class="amrow"><i class="fas fa-check-circle"></i> Alto tráfico</div><div class="amrow"><i class="fas fa-check-circle"></i> Parqueo incluido</div><div class="amrow"><i class="fas fa-check-circle"></i> Buena visibilidad</div><div class="amrow"><i class="fas fa-check-circle"></i> Servicios incluidos</div></div></div>
+      </div>
+      <div><div class="fcard"><h3><i class="fas fa-calendar-check"></i> Agendar una visita</h3><input class="fi" type="text" placeholder="Nombre completo"><input class="fi" type="email" placeholder="Correo electrónico"><input class="fi" type="tel" placeholder="Teléfono / WhatsApp"><textarea class="fi fita" placeholder="Mensaje (opcional)"></textarea><button class="btn-fm">Quiero agendar una visita</button><button class="btn-fwa"><i class="fab fa-whatsapp"></i> Hablar por WhatsApp</button></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CARS ===== -->
+<div class="page" id="page-cars">
+  <div class="pg-hero"><div class="pg-icon"><i class="fas fa-car"></i></div><h1>Autos en Venta</h1><p>Encontrá el vehículo perfecto. Te ayudamos con todo el proceso de compra.</p></div>
+  <div class="filters">
+    <div class="filter-top">
+      <div class="sw"><i class="fas fa-search" style="position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--muted)"></i><input type="text" placeholder="Buscar por marca, modelo, año..." style="width:100%;padding:12px 16px 12px 46px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;outline:none;background:var(--bg)"></div>
+      <button class="filter-toggle" id="ftoggle-cars" onclick="toggleFilters('cars')"><i class="fas fa-sliders"></i> Más filtros</button>
+    </div>
+    <div class="filter-panel" id="fpanel-cars">
+      <div class="fg-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="fg"><label>Marca</label><select><option>Todas las marcas</option><option>Kia</option><option>Honda</option><option>Toyota</option></select></div>
+        <div class="fg"><label>Año</label><select><option>Todos los años</option><option>2021</option><option>2022</option><option>2023</option></select></div>
+        <div class="fg"><label>Precio máx</label><input type="text" placeholder="Sin límite"></div>
+      </div>
+      <button class="clr-btn">✕ Limpiar filtros</button>
+    </div>
+  </div>
+  <div class="listings">
+    <div class="listings-inner">
+      <p class="rc" id="cars-count"></p>
+      <div class="prop-grid" id="cars-grid">
+        <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted)"><div style="width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem"></div><p>Cargando autos...</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CAR DETAIL ===== -->
+<div class="page" id="page-carDetail">
+  <div class="det-page">
+    <div class="gal-hero" onclick="openLb(event,CI1,0)">
+      <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1400&q=85" alt="">
+      <div class="gal-ctr"><i class="fas fa-images"></i> 1 / 5 · Click para galería completa</div>
+      <div class="det-badge"><span class="badge b-yr">2023</span></div>
+    </div>
+    <div class="det-layout">
+      <div>
+        <p class="det-type">Kia</p><h1 class="det-title">Sportage LX</h1><p class="det-price">$29,800</p>
+        <div class="ibox"><h3>Especificaciones</h3><div class="specs-row"><div class="spec-i"><i class="fas fa-tachometer-alt"></i><span class="sv">12 000 km</span><span class="sl">Kilometraje</span></div><div class="spec-i"><i class="fas fa-cog"></i><span class="sv">Automática</span><span class="sl">Transmisión</span></div><div class="spec-i"><i class="fas fa-gas-pump"></i><span class="sv">Gasolina</span><span class="sl">Combustible</span></div><div class="spec-i"><i class="fas fa-palette"></i><span class="sv">Rojo</span><span class="sl">Color</span></div></div></div>
+        <div class="ibox"><h3>Estado</h3><p style="font-size:14.5px;color:var(--muted);line-height:1.75">Prácticamente nuevo, garantía de fábrica vigente hasta 2028. Cero detalles.</p></div>
+        <div class="ibox"><h3>Descripción</h3><p style="font-size:14.5px;color:var(--teal);line-height:1.75">El nuevo diseño de Sportage con tecnología de punta. Pantalla curva de 12", asistente de carril, frenado automático de emergencia.</p></div>
+        <div class="ibox"><h3>Extras y equipamiento</h3><div class="am-grid"><div class="amrow"><i class="fas fa-check-circle"></i> Garantía vigente</div><div class="amrow"><i class="fas fa-check-circle"></i> Asistente de carril</div><div class="amrow"><i class="fas fa-check-circle"></i> Frenado automático</div><div class="amrow"><i class="fas fa-check-circle"></i> Pantalla 12"</div><div class="amrow"><i class="fas fa-check-circle"></i> Wireless charging</div></div></div>
+      </div>
+      <div><div class="fcard"><h3><i class="fas fa-calendar-check"></i> Agendar prueba de manejo</h3><input class="fi" type="text" placeholder="Nombre completo"><input class="fi" type="email" placeholder="Correo electrónico"><input class="fi" type="tel" placeholder="Teléfono / WhatsApp"><textarea class="fi fita" placeholder="Mensaje (opcional)"></textarea><button class="btn-fm">Solicitar información</button><button class="btn-fwa"><i class="fab fa-whatsapp"></i> Hablar por WhatsApp</button></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CREDITS ===== -->
+<div class="page" id="page-credits">
+  <div class="pg-hero"><div class="pg-icon"><i class="fas fa-credit-card"></i></div><h1>Créditos y Financiamiento</h1><p>Soluciones con prestamistas privados y asesoría en créditos/planes maduros del INVU</p></div>
+  <div class="section s-bg">
+    <div class="cr-grid">
+      <div class="crc"><div class="cr-ico ciy"><i class="fas fa-users"></i></div><h3>Créditos con Prestamistas Privados</h3><div class="al-b"><strong>Importante:</strong> NO trabajamos con bancos ni instituciones financieras. Conectamos a nuestros clientes con prestamistas privados.</div><h4>¿Cómo funciona?</h4><ul class="cr-ul"><li><i class="fas fa-check-circle"></i> No trabajamos con bancos ni instituciones financieras</li><li><i class="fas fa-check-circle"></i> Créditos otorgados por prestamistas privados de confianza</li><li><i class="fas fa-check-circle"></i> Se usa una propiedad como garantía hipotecaria</li><li><i class="fas fa-check-circle"></i> Generalmente hasta el 50% del valor de la propiedad</li><li><i class="fas fa-check-circle"></i> Te conectamos con prestamistas confiables</li><li><i class="fas fa-check-circle"></i> Revisamos monto, plazo, tasa y garantías contigo</li><li><i class="fas fa-check-circle"></i> Coordinamos el proceso con notario/abogado</li></ul><div class="gt-b"><i class="fas fa-shield-halved"></i><div><strong style="display:block;font-size:13px;margin-bottom:3px">Garantía requerida</strong><span style="font-size:12px">Se presta hasta el 50% o menos del valor de la propiedad.</span></div></div></div>
+      <div class="crc"><div class="cr-ico cib"><i class="fas fa-building"></i></div><h3>Créditos/Planes Maduros del INVU</h3><p style="font-size:14px;color:var(--muted);margin-bottom:1rem;line-height:1.65">AyS asesora en la compra y venta de créditos o planes maduros del INVU.</p><h4>Nuestros servicios incluyen:</h4><ul class="cr-ul"><li><i class="fas fa-check-circle"></i> Asesoría en compra y venta de créditos/planes maduros del INVU</li><li><i class="fas fa-check-circle"></i> Te ayudamos a entender requisitos y pasos</li><li><i class="fas fa-check-circle"></i> Analizamos las opciones según tu situación</li><li><i class="fas fa-check-circle"></i> Acompañamiento en todo el proceso</li><li><i class="fas fa-check-circle"></i> Gestión de documentación necesaria</li></ul><div class="in-bl"><i class="fas fa-file-alt"></i><div><strong style="display:block;margin-bottom:4px">Asesoría personalizada</strong>Te ayudamos a entender los requisitos y opciones según tu situación particular.</div></div></div>
+    </div>
+    <div class="fp">
+      <h3>¿Te interesa alguna opción?</h3><p>Completá el formulario y un asesor te contactará para evaluar tu caso</p>
+      <div class="fr"><div class="ff"><label>Nombre completo <span>*</span></label><input type="text" placeholder="Tu nombre"></div><div class="ff"><label>Correo electrónico <span>*</span></label><input type="email" placeholder="tu@email.com"></div></div>
+      <div class="fr"><div class="ff"><label>Teléfono <span>*</span></label><input type="tel" placeholder="+506 8572-5465"></div><div class="ff"><label>¿Qué te interesa? <span>*</span></label><select><option value="">Seleccioná una opción</option><option>Crédito privado</option><option>Plan INVU</option></select></div></div>
+      <div class="ff" style="margin-bottom:1rem"><label>Monto aproximado (opcional)</label><input type="text" placeholder="Ej: 50000"></div>
+      <div class="ff" style="margin-bottom:1.5rem"><label>Descripción de garantía (si aplica)</label><textarea placeholder="Ej: Casa de 3 habitaciones en Escazú, valor aprox $200,000..."></textarea></div>
+      <button class="btn-send">Quiero información de créditos <i class="fas fa-arrow-right"></i></button>
+      <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:1rem">¿Preferís hablar directamente? <a href="#" style="color:var(--teal);font-weight:600;text-decoration:none"><i class="fab fa-whatsapp"></i> Contactar por WhatsApp</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MANAGEMENT ===== -->
+<div class="page" id="page-management">
+  <div class="pg-hero"><div class="pg-icon"><i class="fas fa-briefcase"></i></div><h1>Gestionamos tu Propiedad, Vehículo o INVU</h1><p>Dejá en nuestras manos la venta o alquiler de tu propiedad, la venta de tu vehículo, o la gestión de tu crédito/plan maduro del INVU</p></div>
+  <div class="cm-bar"><p>Trabajamos a comisión: <strong>Aproximadamente 5% del valor de la operación</strong></p></div>
+  <div class="section s-bg">
+    <div class="tc"><h2 class="s-title">¿Qué podemos gestionar por vos?</h2><p class="s-sub">Nos encargamos de todo el proceso para que vos no tengas que preocuparte</p></div>
+    <div class="mg-grid" style="margin-top:2.5rem">
+      <div class="mgc"><div class="mg-ico"><i class="fas fa-building"></i></div><h3>Propiedades</h3><p>Manejamos la venta o alquiler de tu propiedad</p><ul><li><i class="fas fa-check-circle"></i> Publicación en nuestros canales</li><li><i class="fas fa-check-circle"></i> Fotografía profesional</li><li><i class="fas fa-check-circle"></i> Atención de interesados</li><li><i class="fas fa-check-circle"></i> Coordinación de visitas</li><li><i class="fas fa-check-circle"></i> Negociación y cierre</li></ul></div>
+      <div class="mgc"><div class="mg-ico"><i class="fas fa-car"></i></div><h3>Vehículos</h3><p>Gestionamos la venta de tu auto</p><ul><li><i class="fas fa-check-circle"></i> Publicación con fotos profesionales</li><li><i class="fas fa-check-circle"></i> Atención de compradores</li><li><i class="fas fa-check-circle"></i> Coordinación de pruebas de manejo</li><li><i class="fas fa-check-circle"></i> Asesoría en el proceso</li><li><i class="fas fa-check-circle"></i> Acompañamiento al cierre</li></ul></div>
+      <div class="mgc"><div class="mg-ico"><i class="fas fa-credit-card"></i></div><h3>Créditos INVU</h3><p>Asesoramos y gestionamos tu crédito/plan maduro del INVU</p><ul><li><i class="fas fa-check-circle"></i> Evaluación de tu plan INVU</li><li><i class="fas fa-check-circle"></i> Asesoría sobre opciones</li><li><i class="fas fa-check-circle"></i> Gestión de documentación</li><li><i class="fas fa-check-circle"></i> Conexión con compradores</li><li><i class="fas fa-check-circle"></i> Acompañamiento completo</li></ul></div>
+    </div>
+  </div>
+  <div class="cta-band" style="padding:3.5rem 5rem">
+    <h2 style="font-size:1.9rem;margin-bottom:2rem">¿Por qué elegir AyS?</h2>
+    <div class="why-grid"><div class="wi"><i class="fas fa-camera"></i><p>Fotografía y publicación profesional</p></div><div class="wi"><i class="fas fa-bullhorn"></i><p>Promoción en redes sociales</p></div><div class="wi"><i class="fas fa-users"></i><p>Atención de interesados 24/7</p></div><div class="wi"><i class="fas fa-calendar-check"></i><p>Coordinación de citas y visitas</p></div></div>
+  </div>
+  <div class="section s-bg">
+    <div class="fp">
+      <h3>Contáctanos para gestionar tu activo</h3><p>Completá el formulario y un asesor te contactará para evaluar tu caso</p>
+      <div class="fr"><div class="ff"><label>Nombre completo <span>*</span></label><input type="text" placeholder="Tu nombre"></div><div class="ff"><label>Correo electrónico <span>*</span></label><input type="email" placeholder="tu@email.com"></div></div>
+      <div class="fr"><div class="ff"><label>Teléfono <span>*</span></label><input type="tel" placeholder="+506 8572-5465"></div><div class="ff"><label>¿Qué querés gestionar? <span>*</span></label><select><option value="">Seleccioná una opción</option><option>Propiedad</option><option>Vehículo</option><option>Crédito INVU</option></select></div></div>
+      <div class="ff" style="margin-bottom:1.5rem"><label>Descripción del activo</label><textarea placeholder="Ej: Casa de 3 habitaciones en Escazú, 180 m², valor aprox $250,000..."></textarea></div>
+      <button class="btn-send">Quiero que gestionen mi activo <i class="fas fa-arrow-right"></i></button>
+      <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:1rem">¿Preferís hablar directamente? <a href="#" style="color:var(--teal);font-weight:600;text-decoration:none"><i class="fab fa-whatsapp"></i> Contactar por WhatsApp</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ABOUT ===== -->
+<div class="page" id="page-about">
+  <div class="pg-hero"><div class="pg-icon"><i class="fas fa-users"></i></div><h1>Sobre Nosotros</h1><p>Conocé a Adrián Salas y Susy Bazo, los fundadores de AyS Soluciones Comerciales</p></div>
+  <div class="section">
+    <div class="about-wrap">
+      <div class="agent-photos"><div class="agent-card"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&q=80" alt="Adrián"><div class="agent-lbl"><h4>Adrián Salas</h4><p>Agente Inmobiliario · Co-fundador</p></div></div><div class="agent-card"><img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=500&q=80" alt="Susy"><div class="agent-lbl"><h4>Susy Bazo</h4><p>Agente Inmobiliaria · Co-fundadora</p></div></div></div>
+      <div class="about-text">
+        <p class="s-label">Nuestra historia</p><h2 class="s-title">Tu socio de confianza en soluciones comerciales</h2>
+        <p><strong>AyS Soluciones Comerciales</strong> nació de la visión compartida de Adrián Salas y Susy Bazo: ofrecer un servicio inmobiliario diferente, basado en la confianza, la transparencia y el acompañamiento genuino.</p>
+        <p>Con años de experiencia en el mercado inmobiliario costarricense, entendemos que comprar, vender o alquilar una propiedad es una de las decisiones más importantes en la vida de una persona.</p>
+        <p>Además de propiedades, ofrecemos servicios de venta de vehículos y soluciones de financiamiento a través de prestamistas privados y asesoría en créditos/planes maduros del INVU.</p>
+        <div class="cb"><h4>Nuestro compromiso</h4><p>Trabajamos a comisión (generalmente alrededor del 5%), lo que significa que nuestro éxito depende del tuyo. Solo ganamos cuando vos ganás.</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="section s-bg"><div class="tc"><p class="s-label">Nuestros valores</p><h2 class="s-title">Lo que nos define</h2></div><div class="vg"><div class="vc"><i class="fas fa-shield-halved"></i><h3>Confianza</h3><p>Transparencia total en cada transacción.</p></div><div class="vc"><i class="fas fa-star"></i><h3>Excelencia</h3><p>Nos esforzamos por brindar el mejor servicio posible.</p></div><div class="vc"><i class="fas fa-handshake"></i><h3>Compromiso</h3><p>Trabajamos con dedicación hasta cerrar cada operación.</p></div></div></div>
+  <div class="section"><div class="tc"><p class="s-label">Testimonios</p><h2 class="s-title">Lo que dicen nuestros clientes</h2></div><div class="tg"><div class="tc2"><div class="qm"><i class="fas fa-quote-left"></i></div><p>"Adrián y Susy me ayudaron a vender mi casa en tiempo récord. Fueron honestos sobre el precio de mercado y me acompañaron en todo el proceso. ¡Excelente servicio!"</p><div class="ta-name"><h4>María González</h4><span>Vendió su casa en San José</span></div></div><div class="tc2"><div class="qm"><i class="fas fa-quote-left"></i></div><p>"Buscaba mi primer apartamento y no tenía idea por dónde empezar. AyS me guió paso a paso, desde encontrar la propiedad ideal hasta cerrar la negociación."</p><div class="ta-name"><h4>Carlos Ramírez</h4><span>Compró un apartamento</span></div></div><div class="tc2"><div class="qm"><i class="fas fa-quote-left"></i></div><p>"Necesitaba financiamiento urgente y los bancos me cerraban las puertas. Gracias a AyS pude conectar con un prestamista confiable y resolver mi situación."</p><div class="ta-name"><h4>Laura Fernández</h4><span>Obtuvo crédito privado</span></div></div></div><div style="text-align:center;margin-top:3.5rem"><h3 style="font-size:1.6rem;font-weight:800;margin-bottom:6px">¿Listo para empezar?</h3><p style="color:var(--muted);margin-bottom:1.5rem">Contáctanos hoy y descubrí cómo podemos ayudarte</p><button class="btn-gold" onclick="go('contact')">Contactar ahora <i class="fas fa-arrow-right"></i></button></div></div>
+  <div class="soc-bar"><p>Publicamos todos los días. ¡Síguenos!</p><div class="s-icons"><a class="s-ico" href="#"><i class="fab fa-instagram"></i></a><a class="s-ico" href="#"><i class="fab fa-facebook"></i></a><a class="s-ico" href="#"><i class="fab fa-tiktok"></i></a></div></div>
+</div>
+
+<!-- ===== CONTACT ===== -->
+<div class="page" id="page-contact">
+  <div class="pg-hero"><div class="pg-icon"><i class="fas fa-comment-dots"></i></div><h1>Contáctanos</h1><p>Estamos aquí para ayudarte. Escribinos y te responderemos a la brevedad.</p></div>
+  <div class="ct-wrap">
+    <div>
+      <div class="ci"><div class="ci-ic"><i class="fas fa-phone"></i></div><div><h4>Teléfono / WhatsApp</h4><p>+506 8572-5465</p><p>+506 8321-5948</p><span>Respuesta inmediata</span></div></div>
+      <div class="ci"><div class="ci-ic"><i class="fas fa-envelope"></i></div><div><h4>Correo electrónico</h4><p>info@ays.homes</p><span>Respondemos en menos de 24 horas</span></div></div>
+      <div class="ci"><div class="ci-ic"><i class="fas fa-clock"></i></div><div><h4>Horario de atención</h4><p>Lun - Vie: 8:00 - 18:00</p><span>Sábados: 9:00 - 13:00</span></div></div>
+      <div class="ci"><div class="ci-ic"><i class="fas fa-location-dot"></i></div><div><h4>Ubicación</h4><p>San José, Costa Rica</p><span>Atendemos todo el país</span></div></div>
+      <div class="sc"><h4>Síguenos en redes sociales</h4><p>Publicamos propiedades, autos y oportunidades de crédito todos los días.</p><div class="sc-btns"><a class="sc-btn ig" href="#"><i class="fab fa-instagram"></i></a><a class="sc-btn fb" href="#"><i class="fab fa-facebook"></i></a><a class="sc-btn tk" href="#"><i class="fab fa-tiktok"></i></a></div></div>
+    </div>
+    <div class="cfb">
+      <h3>Envianos un mensaje</h3><p>Completá el formulario y te responderemos pronto</p>
+      <div class="fr"><div class="ff"><label>Nombre completo <span>*</span></label><input type="text" placeholder="Tu nombre"></div><div class="ff"><label>Correo electrónico <span>*</span></label><input type="email" placeholder="tu@email.com"></div></div>
+      <div class="fr"><div class="ff"><label>Teléfono / WhatsApp <span>*</span></label><input type="tel" placeholder="+506 8572-5465"></div><div class="ff"><label>Motivo <span>*</span></label><select><option value="">Seleccioná una opción</option><option>Propiedades</option><option>Autos</option><option>Créditos</option><option>Gestión</option><option>Otro</option></select></div></div>
+      <div class="ff" style="margin-bottom:1.5rem"><label>Mensaje</label><textarea placeholder="Contanos en qué podemos ayudarte..."></textarea></div>
+      <button class="btn-send"><i class="fas fa-paper-plane"></i> Enviar mensaje</button>
+    </div>
+  </div>
+  <div class="wa-sec"><div class="wa-ico"><i class="fab fa-whatsapp"></i></div><h3>¿Preferís hablar directamente?</h3><p>Escribinos por WhatsApp y te atendemos de inmediato</p><button class="btn-wa"><i class="fab fa-whatsapp"></i> Chatear por WhatsApp</button></div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lb">
+  <div class="lb-topbar">
+    <span class="lb-counter-top" id="lbCnt"></span>
+    <button class="lb-cl" id="lbCl"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="lb-main">
+    <button class="lb-arr" id="lbPv"><i class="fas fa-chevron-left"></i></button>
+    <img class="lb-img" id="lbImg" src="" alt="">
+    <button class="lb-arr" id="lbNx"><i class="fas fa-chevron-right"></i></button>
+  </div>
+  <div class="lb-thumbs" id="lbTh"></div>
+</div>
+
+<script>
+// ── SUPABASE CONFIG ──
+// Pegá tu URL y clave acá (se sincronizan con admin.html via localStorage)
+var SB_URL = '';
+var SB_KEY = '';
+var sbClient = null;
+var activeItem = null; // item abierto en detalle
+
+function getSbConfig(){
+  try{
+    var cfg = JSON.parse(localStorage.getItem('ays_admin_config')||'{}');
+    return { url: cfg.sbUrl||SB_URL, key: cfg.sbKey||SB_KEY };
+  }catch(e){ return {url:SB_URL,key:SB_KEY}; }
+}
+function initSb(){
+  var cfg = getSbConfig();
+  if(cfg.url && cfg.key){
+    sbClient = supabase.createClient(cfg.url, cfg.key);
+    return true;
+  }
+  return false;
+}
+
+// ── IMÁGENES ESTÁTICAS FALLBACK (se muestran si Supabase no está configurado) ──
+var PI1=['https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&q=85','https://images.unsplash.com/photo-1615460549969-36fa19521a4f?w=1200&q=85','https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1200&q=85','https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=1200&q=85'];
+var PI2=['https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200&q=85','https://images.unsplash.com/photo-1464082354059-27db6ce50048?w=1200&q=85','https://images.unsplash.com/photo-1508193638397-1c4234db14d8?w=1200&q=85'];
+var PI3=['https://images.unsplash.com/photo-1613977257365-aaae5a9817ff?w=1200&q=85','https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=1200&q=85','https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200&q=85','https://images.unsplash.com/photo-1484154218962-a197022b5858?w=1200&q=85','https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1200&q=85','https://images.unsplash.com/photo-1630699144867-37acec97df5a?w=1200&q=85'];
+var PI4=PI3.slice(0,5),PI5=PI1.slice(0,4),PI6=PI2.slice(0,3);
+var CI1=['https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1200&q=85','https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=1200&q=85','https://images.unsplash.com/photo-1553440569-bcc63803a83d?w=1200&q=85','https://images.unsplash.com/photo-1489824904134-891ab64532f1?w=1200&q=85','https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=1200&q=85'];
+var CI2=CI1.slice(0,4),CI3=[CI1[2],CI1[3],CI1[0],CI1[1],CI1[4]];
+
+// ── DEMO DATA (cuando no hay Supabase configurado) ──
+var DEMO_PROPS = [
+  {id:'d1',kind:'property',title:'Local Comercial en Santa Ana',prop_type:'Local',operation:'Alquiler',location:'Forum Santa Ana, San José',price:'2500',currency:'$',beds:null,baths:null,parking:4,area:120,photos:PI1,description:'Local en plaza de alto tráfico.',amenidades:['Alto tráfico','Parqueo incluido','Buena visibilidad'],featured:false},
+  {id:'d2',kind:'property',title:'Terreno en Guanacaste',prop_type:'Terreno',operation:'Venta',location:'Playa Tamarindo, Guanacaste',price:'85000',currency:'$',photos:PI2,amenidades:[],featured:false},
+  {id:'d3',kind:'property',title:'Casa Moderna en Escazú',prop_type:'Casa',operation:'Venta',location:'Escazú Centro, San José',price:'385000',currency:'$',beds:4,baths:5,area:280,photos:PI3,amenidades:['Piscina','Seguridad 24h','Jardín'],featured:true},
+  {id:'d4',kind:'property',title:'Casa en Condominio Lindora',prop_type:'Casa',operation:'Alquiler',location:'Lindora, Santa Ana',price:'3200',currency:'$',beds:3,baths:2,photos:PI4,amenidades:['Condominio cerrado','Gimnasio'],featured:true},
+  {id:'d5',kind:'property',title:'Apartamento en Rohrmoser',prop_type:'Apartamento',operation:'Venta',location:'Rohrmoser, San José',price:'180000',currency:'$',beds:2,baths:2,photos:PI5,amenidades:[]},
+  {id:'d6',kind:'property',title:'Oficina en Zona Rosa',prop_type:'Oficina',operation:'Alquiler',location:'Zona Rosa, San José',price:'1800',currency:'$',area:90,photos:PI6,amenidades:[]},
+];
+var DEMO_CARS = [
+  {id:'c1',kind:'car',title:'Sportage LX',brand:'Kia',year:'2023',km:'12 000 km',transmission:'Automática',fuel:'Gasolina',color:'Rojo',price:'29800',currency:'$',photos:CI1,description:'Prácticamente nuevo, garantía vigente hasta 2028.',amenidades:['Garantía vigente','Pantalla 12"','Wireless charging'],featured:true},
+  {id:'c2',kind:'car',title:'Civic EX',brand:'Honda',year:'2021',km:'45 000 km',transmission:'Automática',fuel:'Gasolina',color:'Blanco',price:'24900',currency:'$',photos:CI2,description:'Muy bien cuidado, interior impecable.',amenidades:['Sin golpes','Interior impecable'],featured:true},
+  {id:'c3',kind:'car',title:'RAV4 XLE',brand:'Toyota',year:'2022',km:'28 000 km',transmission:'Automática',fuel:'Gasolina',color:'Gris',price:'32500',currency:'$',photos:CI3,description:'Un solo dueño, mantenimiento al día.',amenidades:['Un dueño','Mantenimiento agencia'],featured:true},
+];
+
+// ── RENDER HELPERS ──
+function fmtPrice(p){
+  var n = parseFloat(String(p||'').replace(/[^0-9.]/g,''));
+  if(isNaN(n)) return p||'';
+  return n.toLocaleString('es-CR');
+}
+function escH(s){ var d=document.createElement('div');d.textContent=s;return d.innerHTML; }
+
+function renderPropCard(item){
+  var photos = item.photos||[];
+  var img = photos.length ? photos[0] : 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=700&q=80';
+  var opClass = item.operation==='Alquiler' ? 'b-rent' : 'b-sale';
+  var specs = '';
+  if(item.beds) specs += '<span class="pspec"><i class="fas fa-bed"></i> '+item.beds+'</span>';
+  if(item.baths) specs += '<span class="pspec"><i class="fas fa-bath"></i> '+item.baths+'</span>';
+  if(item.area) specs += '<span class="pspec"><i class="fas fa-expand"></i> '+item.area+' m²</span>';
+  if(item.parking) specs += '<span class="pspec"><i class="fas fa-car"></i> '+item.parking+'</span>';
+  var priceStr = (item.currency||'$')+fmtPrice(item.price)+(item.operation==='Alquiler'?'<span>/mes</span>':'');
+  var photosSafe = JSON.stringify(photos).replace(/'/g,"\\'");
+  return '<div class="pcard">'+
+    '<div class="pimg" onclick=\'openLbArr(event,'+photosSafe+',0)\'>' +
+      '<img src="'+escH(img)+'" loading="lazy" alt="">'+
+      '<div class="pbadges">'+
+        '<span class="badge '+opClass+'">'+escH(item.operation||'Venta')+'</span>'+
+        (item.featured?'<span class="badge b-feat">Destacado</span>':'')+
+      '</div>'+
+      (photos.length>1?'<div class="gal-badge"><i class="fas fa-images"></i> '+photos.length+'</div>':'')+
+    '</div>'+
+    '<div class="pbody">'+
+      '<p class="ptype">'+escH(item.prop_type||'Propiedad')+'</p>'+
+      '<h3 class="pname">'+escH(item.title||'')+'</h3>'+
+      (item.location?'<p class="ploc"><i class="fas fa-location-dot"></i> '+escH(item.location)+'</p>':'')+
+      '<p class="pprice">'+priceStr+'</p>'+
+      (specs?'<div class="pspecs">'+specs+'</div>':'')+
+      '<div class="pacts">'+
+        '<button class="btn-view" onclick="openDetail(\''+item.id+'\',\'property\')">Ver detalles</button>'+
+        '<button class="btn-save"><i class="far fa-bookmark"></i></button>'+
+      '</div>'+
+    '</div>'+
+  '</div>';
+}
+
+function renderCarCard(item){
+  var photos = item.photos||[];
+  var img = photos.length ? photos[0] : 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=700&q=80';
+  var photosSafe = JSON.stringify(photos).replace(/'/g,"\\'");
+  return '<div class="pcard">'+
+    '<div class="pimg" onclick=\'openLbArr(event,'+photosSafe+',0)\'>'+
+      '<img src="'+escH(img)+'" loading="lazy" alt="">'+
+      '<div class="pbadges">'+
+        (item.year?'<span class="badge b-yr">'+escH(item.year)+'</span>':'')+
+        (item.featured?'<span class="badge b-feat">Destacado</span>':'')+
+      '</div>'+
+      (photos.length>1?'<div class="gal-badge"><i class="fas fa-images"></i> '+photos.length+'</div>':'')+
+    '</div>'+
+    '<div class="pbody">'+
+      '<p class="ptype">'+escH(item.brand||'Auto')+'</p>'+
+      '<h3 class="pname">'+escH(item.title||'')+'</h3>'+
+      '<p class="pprice" style="color:var(--gold)">'+(item.currency||'$')+fmtPrice(item.price)+'</p>'+
+      (item.description?'<p style="font-size:15px;color:var(--muted);margin-bottom:12px;line-height:1.5">'+escH(item.description.slice(0,80))+'</p>':'')+
+      '<div class="pspecs">'+
+        (item.km?'<span class="pspec"><i class="fas fa-tachometer-alt"></i> '+escH(item.km)+'</span>':'')+
+        (item.transmission?'<span class="pspec"><i class="fas fa-cog"></i> '+escH(item.transmission.slice(0,4))+'.</span>':'')+
+        (item.fuel?'<span class="pspec"><i class="fas fa-gas-pump"></i> '+escH(item.fuel)+'</span>':'')+
+      '</div>'+
+      '<div class="pacts" style="margin-top:1rem">'+
+        '<button class="btn-view" onclick="openDetail(\''+item.id+'\',\'car\')">Ver detalles</button>'+
+        '<button class="btn-save"><i class="far fa-bookmark"></i></button>'+
+      '</div>'+
+    '</div>'+
+  '</div>';
+}
+
+// ── LOAD FROM SUPABASE OR DEMO ──
+var allPropsData = [];
+var allCarsData = [];
+
+async function loadListings(){
+  var ok = initSb();
+  if(ok){
+    try{
+      var r1 = await sbClient.from('listings').select('*').eq('kind','property').order('created_at',{ascending:false});
+      allPropsData = r1.data||[];
+      var r2 = await sbClient.from('listings').select('*').eq('kind','car').order('created_at',{ascending:false});
+      allCarsData = r2.data||[];
+    }catch(e){
+      allPropsData = DEMO_PROPS;
+      allCarsData = DEMO_CARS;
+    }
+  } else {
+    allPropsData = DEMO_PROPS;
+    allCarsData = DEMO_CARS;
+  }
+  renderAllListings();
+}
+
+function renderAllListings(){
+  var pg = document.getElementById('props-grid');
+  var cg = document.getElementById('cars-grid');
+  var pc = document.getElementById('props-count');
+  var cc = document.getElementById('cars-count');
+  if(pg){
+    if(allPropsData.length){
+      pg.innerHTML = allPropsData.map(renderPropCard).join('');
+      if(pc) pc.innerHTML = '<strong>'+allPropsData.length+'</strong> propiedad'+(allPropsData.length!==1?'es':'')+' encontrada'+(allPropsData.length!==1?'s':'');
+    } else {
+      pg.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted)"><i class="fas fa-building" style="font-size:40px;opacity:.3;display:block;margin-bottom:1rem"></i><p>No hay propiedades publicadas aún.</p></div>';
+      if(pc) pc.textContent = '';
+    }
+  }
+  if(cg){
+    if(allCarsData.length){
+      cg.innerHTML = allCarsData.map(renderCarCard).join('');
+      if(cc) cc.innerHTML = '<strong>'+allCarsData.length+'</strong> vehículo'+(allCarsData.length!==1?'s':'')+' encontrado'+(allCarsData.length!==1?'s':'');
+    } else {
+      cg.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted)"><i class="fas fa-car" style="font-size:40px;opacity:.3;display:block;margin-bottom:1rem"></i><p>No hay autos publicados aún.</p></div>';
+      if(cc) cc.textContent = '';
+    }
+  }
+}
+
+// ── DETAIL PAGE ──
+function openDetail(id, kind){
+  var items = kind==='property' ? allPropsData : allCarsData;
+  var item = items.find(function(i){ return i.id===id; });
+  if(!item) return;
+  activeItem = item;
+  renderDetailPage(item, kind);
+  go(kind==='property' ? 'propertyDetail' : 'carDetail');
+}
+
+function renderDetailPage(item, kind){
+  var photos = item.photos||[];
+  var heroImg = photos.length ? photos[0] : '';
+
+  if(kind==='property'){
+    var det = document.querySelector('#page-propertyDetail .det-page');
+    if(!det) return;
+    var opClass = item.operation==='Alquiler' ? 'b-rent' : 'b-sale';
+    var photosSafe = JSON.stringify(photos).replace(/'/g,"\\'");
+    var specs = '';
+    if(item.beds) specs += '<div class="spec-i"><i class="fas fa-bed"></i><span class="sv">'+item.beds+'</span><span class="sl">Habitaciones</span></div>';
+    if(item.baths) specs += '<div class="spec-i"><i class="fas fa-bath"></i><span class="sv">'+item.baths+'</span><span class="sl">Baños</span></div>';
+    if(item.area) specs += '<div class="spec-i"><i class="fas fa-expand-arrows-alt"></i><span class="sv">'+item.area+' m²</span><span class="sl">Área</span></div>';
+    if(item.parking) specs += '<div class="spec-i"><i class="fas fa-car"></i><span class="sv">'+item.parking+'</span><span class="sl">Parqueos</span></div>';
+    var ams = (item.amenidades||[]).map(function(a){ return '<div class="amrow"><i class="fas fa-check-circle"></i> '+escH(a)+'</div>'; }).join('');
+    var priceStr = (item.currency||'$')+fmtPrice(item.price)+(item.operation==='Alquiler'?'<span>/mes</span>':'');
+    det.innerHTML =
+      '<div class="gal-hero" onclick=\'openLbArr(event,'+photosSafe+',0)\'>'+
+        (heroImg?'<img src="'+escH(heroImg)+'" alt="">':'<div style="height:480px;background:#e2e8f0"></div>')+
+        (photos.length>1?'<div class="gal-ctr"><i class="fas fa-images"></i> 1 / '+photos.length+' · Click para galería</div>':'')+
+        '<div class="det-badge"><span class="badge '+opClass+'">'+escH(item.operation||'Venta')+'</span></div>'+
+      '</div>'+
+      '<div class="det-layout">'+
+        '<div>'+
+          '<p class="det-type">'+escH(item.prop_type||'Propiedad')+'</p>'+
+          '<h1 class="det-title">'+escH(item.title||'')+'</h1>'+
+          (item.location?'<p class="det-loc"><i class="fas fa-location-dot"></i> '+escH(item.location)+'</p>':'')+
+          '<p class="det-price">'+priceStr+'</p>'+
+          (specs?'<div class="ibox"><h3>Características</h3><div class="specs-row">'+specs+'</div></div>':'')+
+          (item.description?'<div class="ibox"><h3>Descripción</h3><p style="font-size:14.5px;color:var(--teal);line-height:1.75">'+escH(item.description)+'</p></div>':'')+
+          (ams?'<div class="ibox"><h3>Amenidades</h3><div class="am-grid">'+ams+'</div></div>':'')+
+        '</div>'+
+        '<div>'+detailContactForm('property')+'</div>'+
+      '</div>';
+  } else {
+    var det2 = document.querySelector('#page-carDetail .det-page');
+    if(!det2) return;
+    var photosSafe2 = JSON.stringify(photos).replace(/'/g,"\\'");
+    var specs2 = '';
+    if(item.km) specs2 += '<div class="spec-i"><i class="fas fa-tachometer-alt"></i><span class="sv">'+escH(item.km)+'</span><span class="sl">Kilometraje</span></div>';
+    if(item.transmission) specs2 += '<div class="spec-i"><i class="fas fa-cog"></i><span class="sv">'+escH(item.transmission)+'</span><span class="sl">Transmisión</span></div>';
+    if(item.fuel) specs2 += '<div class="spec-i"><i class="fas fa-gas-pump"></i><span class="sv">'+escH(item.fuel)+'</span><span class="sl">Combustible</span></div>';
+    if(item.color) specs2 += '<div class="spec-i"><i class="fas fa-palette"></i><span class="sv">'+escH(item.color)+'</span><span class="sl">Color</span></div>';
+    var ams2 = (item.amenidades||[]).map(function(a){ return '<div class="amrow"><i class="fas fa-check-circle"></i> '+escH(a)+'</div>'; }).join('');
+    det2.innerHTML =
+      '<div class="gal-hero" onclick=\'openLbArr(event,'+photosSafe2+',0)\'>'+
+        (heroImg?'<img src="'+escH(heroImg)+'" alt="">':'<div style="height:480px;background:#e2e8f0"></div>')+
+        (photos.length>1?'<div class="gal-ctr"><i class="fas fa-images"></i> 1 / '+photos.length+' · Click para galería</div>':'')+
+        '<div class="det-badge"><span class="badge b-yr">'+(item.year||'Auto')+'</span></div>'+
+      '</div>'+
+      '<div class="det-layout">'+
+        '<div>'+
+          '<p class="det-type">'+escH(item.brand||'Auto')+'</p>'+
+          '<h1 class="det-title">'+escH(item.title||'')+'</h1>'+
+          '<p class="det-price">'+(item.currency||'$')+fmtPrice(item.price)+'</p>'+
+          (specs2?'<div class="ibox"><h3>Especificaciones</h3><div class="specs-row">'+specs2+'</div></div>':'')+
+          (item.description?'<div class="ibox"><h3>Descripción</h3><p style="font-size:14.5px;color:var(--teal);line-height:1.75">'+escH(item.description)+'</p></div>':'')+
+          (ams2?'<div class="ibox"><h3>Extras y equipamiento</h3><div class="am-grid">'+ams2+'</div></div>':'')+
+        '</div>'+
+        '<div>'+detailContactForm('car')+'</div>'+
+      '</div>';
+  }
+}
+
+function detailContactForm(kind){
+  var label = kind==='car' ? 'Agendar prueba de manejo' : 'Agendar una visita';
+  return '<div class="fcard"><h3><i class="fas fa-calendar-check"></i> '+label+'</h3>'+
+    '<input class="fi" type="text" placeholder="Nombre completo">'+
+    '<input class="fi" type="email" placeholder="Correo electrónico">'+
+    '<input class="fi" type="tel" placeholder="Teléfono / WhatsApp">'+
+    '<textarea class="fi fita" placeholder="Mensaje (opcional)"></textarea>'+
+    '<button class="btn-fm">Solicitar información</button>'+
+    '<button class="btn-fwa"><i class="fab fa-whatsapp"></i> Hablar por WhatsApp</button>'+
+  '</div>';
+}
+
+// ── LIGHTBOX (acepta array directamente) ──
+var lbArr=[],lbIdx=0;
+function openLbArr(e,imgs,idx){
+  e.stopPropagation();
+  if(!imgs||!imgs.length) return;
+  lbArr=imgs; lbIdx=idx;
+  renderLb();
+  document.getElementById('lb').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function openLb(e,imgs,idx){ openLbArr(e,imgs,idx); } // backwards compat
+function renderLb(){
+  document.getElementById('lbImg').src=lbArr[lbIdx];
+  document.getElementById('lbCnt').textContent=(lbIdx+1)+' / '+lbArr.length;
+  var th=document.getElementById('lbTh');
+  th.innerHTML='';
+  lbArr.forEach(function(s,i){
+    var d=document.createElement('div');
+    d.className='lb-th'+(i===lbIdx?' active':'');
+    d.innerHTML='<img src="'+s+'" loading="lazy">';
+    d.onclick=(function(idx){return function(){lbIdx=idx;renderLb();};})(i);
+    th.appendChild(d);
+  });
+}
+function closeLb(){
+  document.getElementById('lb').classList.remove('open');
+  document.body.style.overflow='';
+}
+document.getElementById('lbCl').onclick=closeLb;
+document.getElementById('lbPv').onclick=function(e){e.stopPropagation();lbIdx=(lbIdx-1+lbArr.length)%lbArr.length;renderLb();};
+document.getElementById('lbNx').onclick=function(e){e.stopPropagation();lbIdx=(lbIdx+1)%lbArr.length;renderLb();};
+document.getElementById('lb').onclick=function(e){if(e.target===document.getElementById('lb'))closeLb();};
+document.addEventListener('keydown',function(e){
+  if(!document.getElementById('lb').classList.contains('open'))return;
+  if(e.key==='Escape')closeLb();
+  if(e.key==='ArrowLeft'){lbIdx=(lbIdx-1+lbArr.length)%lbArr.length;renderLb();}
+  if(e.key==='ArrowRight'){lbIdx=(lbIdx+1)%lbArr.length;renderLb();}
+});
+
+// ── FILTROS ──
+function toggleFilters(id){
+  var panel=document.getElementById('fpanel-'+id);
+  var btn=document.getElementById('ftoggle-'+id);
+  var open=panel.classList.toggle('open');
+  btn.classList.toggle('active',open);
+  btn.innerHTML=open?'<i class="fas fa-times"></i> Cerrar filtros':'<i class="fas fa-sliders"></i> Más filtros';
+}
+
+// ── NAVEGACIÓN ──
+function go(page){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.getElementById('page-'+page).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+  var nav=document.getElementById('navbar');
+  if(page==='home'){
+    nav.classList.add('dark');
+    nav.classList.remove('scrolled');
+  } else {
+    nav.classList.remove('dark');
+    nav.classList.add('scrolled');
+  }
+  // Reload listings when visiting those pages (fresh data)
+  if(page==='properties'||page==='cars') loadListings();
+}
+
+// ── NAVBAR SCROLL ──
+window.addEventListener('scroll',function(){
+  var nav=document.getElementById('navbar');
+  var homeActive=document.getElementById('page-home').classList.contains('active');
+  if(homeActive){
+    if(window.scrollY>60){
+      nav.classList.remove('dark');
+      nav.classList.add('scrolled');
+    } else {
+      nav.classList.add('dark');
+      nav.classList.remove('scrolled');
+    }
+  }
+},{passive:true});
+
+// ── INIT ──
+loadListings();
+</script>
+</body>
+</html>
