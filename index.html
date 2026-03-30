@@ -351,6 +351,118 @@ footer ul li a:hover{color:#fff}
 .fp h3{text-align:center;font-size:1.7rem;font-weight:800;margin-bottom:6px;letter-spacing:-.02em}
 .fp>p{text-align:center;color:var(--teal);font-size:15px;margin-bottom:1.8rem;font-weight:500}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* RESPONSIVE */
+@media (max-width: 1200px){
+  html{font-size:17px}
+  #navbar{padding:0 1.4rem}
+  .nav-links{gap:1.1rem}
+  .hero-content{padding:0 3rem;max-width:760px}
+  .about-wrap{gap:2.5rem}
+  .det-layout{grid-template-columns:1fr 360px;padding:2.2rem}
+  .prop-grid{grid-template-columns:repeat(2,1fr)}
+  .cr-grid{grid-template-columns:1fr}
+  .ct-wrap{grid-template-columns:1fr 1.2fr;padding:3rem 2rem}
+  .why-grid{grid-template-columns:repeat(2,1fr)}
+  .mg-grid,.vg,.tg{grid-template-columns:repeat(2,1fr)}
+  footer{grid-template-columns:repeat(2,1fr);padding:3rem 2rem}
+}
+
+@media (max-width: 980px){
+  body{overflow-x:hidden}
+  #navbar{padding:0 1rem;gap:.8rem}
+  .nav-cta{display:none}
+  .nav-brand{min-width:auto}
+  .nav-logo{width:40px;height:40px}
+  .nb-h1{font-size:14px}
+  .nb-p{font-size:11px}
+  .nav-links{
+    flex:1;
+    gap:.85rem;
+    overflow-x:auto;
+    white-space:nowrap;
+    scrollbar-width:none;
+    -ms-overflow-style:none;
+  }
+  .nav-links::-webkit-scrollbar{display:none}
+  .nav-link{flex:0 0 auto;font-size:14px}
+
+  .hero{min-height:620px}
+  .hero-content{padding:0 1.2rem}
+  .hero-btns{gap:10px}
+  .hero-links{gap:1rem;flex-wrap:wrap}
+
+  .section{padding:4.5rem 1rem}
+  .svc-grid,.about-wrap,.ct-wrap,.det-layout{grid-template-columns:1fr}
+  .agent-card img{height:300px}
+  .avals{gap:1rem;justify-content:space-between}
+
+  .soc-bar{padding:1rem;flex-direction:column;gap:.8rem;text-align:center}
+  .cta-pills{gap:1rem;flex-wrap:wrap}
+
+  .filters{padding:1rem;top:72px}
+  .filter-top{flex-direction:column;align-items:stretch}
+  .filter-toggle{justify-content:center}
+  .fg-grid{grid-template-columns:repeat(2,1fr)}
+  #page-cars .fg-grid{grid-template-columns:repeat(2,1fr) !important}
+
+  .listings{padding:2rem 1rem 4rem}
+  .det-page{margin-top:72px}
+  .gal-hero{height:320px}
+  .det-title{font-size:1.9rem}
+  .det-price{font-size:2rem}
+  .specs-row{grid-template-columns:repeat(2,1fr)}
+  .am-grid{grid-template-columns:1fr}
+  .fcard{position:static;top:auto}
+
+  .cm-bar{padding:1rem}
+  .mg-grid,.vg,.tg,.fr{grid-template-columns:1fr}
+  .wa-sec{margin:0 1rem 3rem;padding:2.2rem 1rem}
+  .fp{padding:2rem 1rem}
+}
+
+@media (max-width: 640px){
+  html{font-size:16px}
+  #navbar{padding:0 .75rem;gap:.6rem}
+  .nav-brand{gap:8px}
+  .nav-logo{width:36px;height:36px;border-radius:8px}
+  .nb-p{display:none}
+  .nb-h1{font-size:13px}
+  .nav-link{font-size:13px}
+
+  .hero{min-height:560px}
+  .hero h1{font-size:clamp(1.8rem,9vw,2.2rem)}
+  .hero p{font-size:15px;line-height:1.6}
+  .hero-pill{font-size:12px;padding:6px 12px;margin-bottom:1.1rem}
+  .scroll-hint{display:none}
+  .btn-gold,.btn-ghost,.btn-wapp,.btn-teal{width:100%;justify-content:center}
+
+  .section{padding:3.6rem .85rem}
+  .s-title{font-size:clamp(1.5rem,7.5vw,2rem)}
+  .s-sub{font-size:15px}
+  .svc-card,.crc,.mgc,.vc,.tc2,.cfb,.ibox{padding:1.25rem}
+  .pbody{padding:1rem}
+  .pname{font-size:17px}
+  .pprice{font-size:20px}
+
+  .filters{padding:.8rem}
+  .fg-grid{grid-template-columns:1fr}
+  #page-cars .fg-grid{grid-template-columns:1fr !important}
+  .prop-grid{grid-template-columns:1fr}
+  .gal-hero{height:240px}
+  .det-layout{padding:1rem}
+  .det-title{font-size:1.45rem}
+  .det-price{font-size:1.7rem}
+
+  .ct-wrap{padding:2rem .85rem}
+  .cta-band[style]{padding:2rem .85rem !important}
+  .ci,.sc{padding:1rem}
+  .fr{gap:.8rem}
+  .btn-send,.btn-wa{font-size:15px;padding:13px 14px}
+
+  footer{grid-template-columns:1fr;padding:2rem 1rem 1.6rem}
+  .foot-bot{padding:.9rem 1rem 1.1rem}
+}
 </style>
 </head>
 <body>
@@ -1019,6 +1131,47 @@ document.addEventListener('click',function(e){
 });
 
 // ── INIT ──
+// â”€â”€ CONTACTO POR CORREO (mailto) â”€â”€
+function sendContactEmail(){
+  var form = document.querySelector('#page-contact .cfb');
+  if(!form) return;
+  var nameEl = form.querySelector('input[type="text"]');
+  var emailEl = form.querySelector('input[type="email"]');
+  var phoneEl = form.querySelector('input[type="tel"]');
+  var subjectEl = form.querySelector('select');
+  var messageEl = form.querySelector('textarea');
+
+  var name = (nameEl && nameEl.value || '').trim();
+  var email = (emailEl && emailEl.value || '').trim();
+  var phone = (phoneEl && phoneEl.value || '').trim();
+  var subjectType = (subjectEl && subjectEl.value || '').trim();
+  var message = (messageEl && messageEl.value || '').trim();
+
+  if(!name || !email || !phone || !subjectType){
+    alert('Por favor completá nombre, correo, teléfono y motivo.');
+    return;
+  }
+
+  var to = 'info@ays.homes';
+  var subject = 'Nuevo contacto web - ' + subjectType;
+  var body =
+    'Nombre: ' + name + '\n' +
+    'Correo: ' + email + '\n' +
+    'Teléfono/WhatsApp: ' + phone + '\n' +
+    'Motivo: ' + subjectType + '\n\n' +
+    'Mensaje:\n' + (message || '(Sin mensaje)');
+
+  window.location.href = 'mailto:' + to +
+    '?subject=' + encodeURIComponent(subject) +
+    '&body=' + encodeURIComponent(body);
+}
+document.addEventListener('click',function(e){
+  var sendBtn = e.target.closest('#page-contact .cfb .btn-send');
+  if(!sendBtn) return;
+  e.preventDefault();
+  sendContactEmail();
+});
+
 loadListings();
 </script>
 </body>
