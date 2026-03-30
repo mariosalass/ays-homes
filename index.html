@@ -1008,7 +1008,9 @@ function getRandomWaUrl(){
 }
 function redirectToRandomWhatsapp(e){
   if(e) e.preventDefault();
-  window.location.href = getRandomWaUrl();
+  var url = getRandomWaUrl();
+  var w = window.open(url,'_blank','noopener,noreferrer');
+  if(!w) window.location.href = url;
 }
 document.addEventListener('click',function(e){
   var waTrigger = e.target.closest('.btn-wapp,.btn-fwa,.btn-wa,.wa-contact-link');
