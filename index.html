@@ -1222,6 +1222,23 @@ document.addEventListener('click',function(e){
   sendContactEmail();
 });
 
+// â”€â”€ FOOTER GLOBAL EN TODAS LAS PÃGINAS â”€â”€
+function injectFooterToPages(){
+  var homePage = document.getElementById('page-home');
+  if(!homePage) return;
+  var homeFooter = homePage.querySelector('footer');
+  var homeFootBot = homePage.querySelector('.foot-bot');
+  if(!homeFooter || !homeFootBot) return;
+
+  document.querySelectorAll('.page').forEach(function(page){
+    if(page.id==='page-home') return;
+    if(page.querySelector('footer')) return;
+    page.appendChild(homeFooter.cloneNode(true));
+    page.appendChild(homeFootBot.cloneNode(true));
+  });
+}
+injectFooterToPages();
+
 loadListings();
 </script>
 </body>
