@@ -50,6 +50,9 @@ button,select,input,textarea{font-family:inherit}
 .nav-link:hover::after{width:100%}
 .nav-cta{background:var(--gold);color:#fff;padding:11px 24px;border-radius:9px;font-size:15px;font-weight:600;cursor:pointer;border:none;transition:background .2s,transform .15s,box-shadow .2s;box-shadow:0 2px 12px rgba(192,139,47,.3)}
 .nav-cta:hover{background:#a87526;transform:translateY(-1px)}
+.nav-menu-btn{display:none;width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:#fff;align-items:center;justify-content:center;cursor:pointer;font-size:18px;transition:background .2s,border-color .2s}
+.nav-menu-btn:hover{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.6)}
+#navbar.scrolled .nav-menu-btn{border-color:var(--border);background:#fff;color:var(--text)}
 
 /* HERO */
 .hero{position:relative;width:100%;height:100vh;min-height:700px;display:flex;align-items:center;overflow:hidden}
@@ -376,16 +379,28 @@ footer ul li a:hover{color:#fff}
   .nav-logo{width:40px;height:40px}
   .nb-h1{font-size:14px}
   .nb-p{font-size:11px}
+  .nav-menu-btn{display:inline-flex;flex-shrink:0}
   .nav-links{
-    flex:1;
-    gap:.85rem;
-    overflow-x:auto;
-    white-space:nowrap;
-    scrollbar-width:none;
-    -ms-overflow-style:none;
+    position:fixed;
+    top:72px;
+    left:0;
+    right:0;
+    background:#fff;
+    border-bottom:1px solid var(--border);
+    box-shadow:0 8px 26px rgba(15,25,35,.12);
+    display:none;
+    flex-direction:column;
+    align-items:stretch;
+    gap:0;
+    padding:.4rem 1rem .9rem;
+    max-height:calc(100vh - 72px);
+    overflow-y:auto;
+    z-index:210;
   }
-  .nav-links::-webkit-scrollbar{display:none}
-  .nav-link{flex:0 0 auto;font-size:14px}
+  #navbar.menu-open .nav-links{display:flex}
+  .nav-link{font-size:15px;color:var(--text) !important;padding:.95rem .2rem;border-bottom:1px solid var(--border)}
+  .nav-link:last-child{border-bottom:none}
+  .nav-link::after{display:none}
 
   .hero{min-height:620px}
   .hero-content{padding:0 1.2rem}
@@ -426,9 +441,10 @@ footer ul li a:hover{color:#fff}
   #navbar{padding:0 .75rem;gap:.6rem}
   .nav-brand{gap:8px}
   .nav-logo{width:36px;height:36px;border-radius:8px}
-  .nb-p{display:none}
+  .nb-p{display:block;font-size:10px}
   .nb-h1{font-size:13px}
-  .nav-link{font-size:13px}
+  .nav-links{padding:.35rem .85rem .75rem}
+  .nav-link{font-size:14px}
 
   .hero{min-height:560px}
   .hero h1{font-size:clamp(1.8rem,9vw,2.2rem)}
@@ -471,7 +487,7 @@ footer ul li a:hover{color:#fff}
 <nav id="navbar" class="dark">
   <div class="nav-brand" onclick="go('home')">
     <div class="nav-logo">AyS</div>
-    <div><p class="nb-h1">AyS Soluciones</p><p class="nb-p">Comerciales</p></div>
+    <div><p class="nb-h1">AyS</p><p class="nb-p">Soluciones Comerciales</p></div>
   </div>
   <div class="nav-links">
     <a class="nav-link" onclick="go('home')">Inicio</a>
@@ -482,6 +498,7 @@ footer ul li a:hover{color:#fff}
     <a class="nav-link" onclick="go('about')">Nosotros</a>
     <a class="nav-link" onclick="go('contact')">Contacto</a>
   </div>
+  <button class="nav-menu-btn" id="navMenuBtn" aria-label="Abrir menú" aria-expanded="false"><i class="fas fa-bars"></i></button>
   <button class="nav-cta" onclick="go('contact')">Contáctanos</button>
 </nav>
 
@@ -559,7 +576,7 @@ footer ul li a:hover{color:#fff}
 
   <div class="soc-bar"><p>Publicamos propiedades, autos y oportunidades de crédito todos los días. ¡Síguenos!</p><div class="s-icons"><a class="s-ico" href="https://www.instagram.com/ays_soluciones_comerciales/" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i></a><a class="s-ico" href="https://www.facebook.com/ayssolucionescomerciales" target="_blank" rel="noopener noreferrer"><i class="fab fa-facebook"></i></a><a class="s-ico" href="https://www.tiktok.com/@ayssolucionescomerciales" target="_blank" rel="noopener noreferrer"><i class="fab fa-tiktok"></i></a></div></div>
   <footer>
-    <div><div class="nav-brand" style="margin-bottom:.8rem" onclick="go('home')"><div class="nav-logo">AyS</div><div><p class="nb-h1" style="color:#fff">AyS Soluciones</p><p class="nb-p" style="color:rgba(255,255,255,.45)">Comerciales</p></div></div><p class="fb-p">Adrián Salas y Susy Bazo, agentes inmobiliarios comprometidos con ayudarte a encontrar la mejor solución.</p></div>
+    <div><div class="nav-brand" style="margin-bottom:.8rem" onclick="go('home')"><div class="nav-logo">AyS</div><div><p class="nb-h1" style="color:#fff">AyS</p><p class="nb-p" style="color:rgba(255,255,255,.45)">Soluciones Comerciales</p></div></div><p class="fb-p">Adrián Salas y Susy Bazo, agentes inmobiliarios comprometidos con ayudarte a encontrar la mejor solución.</p></div>
     <div><h5>Servicios</h5><ul><li><a onclick="go('properties')">Propiedades en venta</a></li><li><a onclick="go('properties')">Propiedades en alquiler</a></li><li><a onclick="go('cars')">Autos en venta</a></li><li><a onclick="go('credits')">Créditos y financiamiento</a></li></ul></div>
     <div><h5>Enlaces</h5><ul><li><a onclick="go('home')">Inicio</a></li><li><a onclick="go('about')">Sobre nosotros</a></li><li><a onclick="go('contact')">Contacto</a></li></ul></div>
     <div><h5>Contacto</h5>
@@ -1086,6 +1103,12 @@ function go(page){
   document.getElementById('page-'+page).classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
   var nav=document.getElementById('navbar');
+  nav.classList.remove('menu-open');
+  var navBtn = document.getElementById('navMenuBtn');
+  if(navBtn){
+    navBtn.setAttribute('aria-expanded','false');
+    navBtn.innerHTML = '<i class="fas fa-bars"></i>';
+  }
   if(page==='home'){
     nav.classList.add('dark');
     nav.classList.remove('scrolled');
@@ -1096,6 +1119,33 @@ function go(page){
   // Reload listings when visiting those pages (fresh data)
   if(page==='properties'||page==='cars') loadListings();
 }
+
+function toggleMobileMenu(force){
+  var nav = document.getElementById('navbar');
+  var navBtn = document.getElementById('navMenuBtn');
+  if(!nav || !navBtn) return;
+  var open = typeof force === 'boolean' ? force : !nav.classList.contains('menu-open');
+  nav.classList.toggle('menu-open',open);
+  navBtn.setAttribute('aria-expanded',open?'true':'false');
+  navBtn.innerHTML = open ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+}
+var navMenuBtn = document.getElementById('navMenuBtn');
+if(navMenuBtn){
+  navMenuBtn.addEventListener('click',function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    toggleMobileMenu();
+  });
+}
+document.addEventListener('click',function(e){
+  var nav = document.getElementById('navbar');
+  if(!nav || !nav.classList.contains('menu-open')) return;
+  if(e.target.closest('#navbar')) return;
+  toggleMobileMenu(false);
+});
+window.addEventListener('resize',function(){
+  if(window.innerWidth>980) toggleMobileMenu(false);
+});
 
 // ── NAVBAR SCROLL ──
 window.addEventListener('scroll',function(){
