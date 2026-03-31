@@ -593,21 +593,22 @@ footer ul li a:hover{color:#fff}
   <div class="pg-hero"><div class="pg-icon"><i class="fas fa-building"></i></div><h1>Propiedades en Venta y Alquiler</h1><p>Explorá nuestra selección de casas, apartamentos, locales, oficinas y terrenos</p></div>
   <div class="filters">
     <div class="filter-top">
-      <div class="sw"><i class="fas fa-search"></i><input type="text" placeholder="Buscar por ubicación, título..."></div>
+      <div class="sw"><i class="fas fa-search"></i><input type="text" id="search-props" placeholder="Buscar por ubicación, título..." oninput="applyPropFilters()"></div>
       <button class="filter-toggle" id="ftoggle-props" onclick="toggleFilters('props')"><i class="fas fa-sliders"></i> Más filtros</button>
     </div>
     <div class="filter-panel" id="fpanel-props">
       <div class="fg-grid">
-        <div class="fg"><label>Transacción</label><select><option>Todas</option><option>Venta</option><option>Alquiler</option></select></div>
-        <div class="fg"><label>Tipo</label><select><option>Todas</option><option>Casa</option><option>Apartamento</option><option>Local</option><option>Terreno</option></select></div>
+        <div class="fg"><label>Transacción</label><select id="f-prop-op" onchange="applyPropFilters()"><option>Todas</option><option>Venta</option><option>Alquiler</option></select></div>
+        <div class="fg"><label>Tipo</label><select id="f-prop-type" onchange="applyPropFilters()"><option>Todas</option><option>Casa</option><option>Apartamento</option><option>Local</option><option>Terreno</option></select></div>
         <div class="fg"><label>Provincia</label><select><option>Todas</option><option>San José</option><option>Alajuela</option><option>Heredia</option><option>Guanacaste</option></select></div>
-        <div class="fg"><label>Habitaciones</label><select><option>Todas</option><option>1</option><option>2</option><option>3</option><option>4+</option></select></div>
+        <div class="fg"><label>Habitaciones</label><select id="f-prop-beds" onchange="applyPropFilters()"><option>Todas</option><option>1</option><option>2</option><option>3</option><option>4+</option></select></div>
         <div class="fg"><label>Baños</label><select><option>Todos</option><option>1</option><option>2</option><option>3+</option></select></div>
         <div class="fg"><label>Parqueos</label><select><option>Todos</option><option>1</option><option>2</option><option>3+</option></select></div>
-        <div class="fg"><label>Precio mín</label><input type="text" placeholder="$0"></div>
-        <div class="fg"><label>Precio máx</label><input type="text" placeholder="Sin límite"></div>
+        <div class="fg"><label>Precio mín</label><input type="text" id="f-prop-price-min" placeholder="0" oninput="applyPropFilters()"></div>
+        <div class="fg"><label>Precio máx</label><input type="text" id="f-prop-price-max" placeholder="Sin límite" oninput="applyPropFilters()"></div>
+        <div class="fg"><label>Moneda del filtro</label><select id="f-prop-filter-currency" onchange="applyPropFilters()"><option value="$">$ (dólares)</option><option value="₡">₡ (colones)</option></select></div>
       </div>
-      <button class="clr-btn">✕ Limpiar filtros</button>
+      <button class="clr-btn" onclick="clearPropFilters()">✕ Limpiar filtros</button>
     </div>
   </div>
   <div class="listings">
@@ -647,20 +648,6 @@ footer ul li a:hover{color:#fff}
 <!-- ===== CARS ===== -->
 <div class="page" id="page-cars">
   <div class="pg-hero"><div class="pg-icon"><i class="fas fa-car"></i></div><h1>Autos en Venta</h1><p>Encontrá el vehículo perfecto. Te ayudamos con todo el proceso de compra.</p></div>
-  <div class="filters">
-    <div class="filter-top">
-      <div class="sw"><i class="fas fa-search" style="position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--muted)"></i><input type="text" placeholder="Buscar por marca, modelo, año..." style="width:100%;padding:12px 16px 12px 46px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;outline:none;background:var(--bg)"></div>
-      <button class="filter-toggle" id="ftoggle-cars" onclick="toggleFilters('cars')"><i class="fas fa-sliders"></i> Más filtros</button>
-    </div>
-    <div class="filter-panel" id="fpanel-cars">
-      <div class="fg-grid" style="grid-template-columns:repeat(3,1fr)">
-        <div class="fg"><label>Marca</label><select><option>Todas las marcas</option><option>Kia</option><option>Honda</option><option>Toyota</option></select></div>
-        <div class="fg"><label>Año</label><select><option>Todos los años</option><option>2021</option><option>2022</option><option>2023</option></select></div>
-        <div class="fg"><label>Precio máx</label><input type="text" placeholder="Sin límite"></div>
-      </div>
-      <button class="clr-btn">✕ Limpiar filtros</button>
-    </div>
-  </div>
   <div class="listings">
     <div class="listings-inner">
       <p class="rc" id="cars-count"></p>
@@ -1095,6 +1082,63 @@ function toggleFilters(id){
   var open=panel.classList.toggle('open');
   btn.classList.toggle('active',open);
   btn.innerHTML=open?'<i class="fas fa-times"></i> Cerrar filtros':'<i class="fas fa-sliders"></i> Más filtros';
+}
+
+// ── FILTROS DE PROPIEDADES CON CONVERSIÓN DE MONEDA ──
+var USD_TO_CRC = 520;
+
+function priceInUSD(item){
+  var p = parseFloat(String(item.price||'').replace(/[^0-9.]/g,'')) || 0;
+  if((item.currency||'$') === '₡') return p / USD_TO_CRC;
+  return p;
+}
+
+function applyPropFilters(){
+  var searchEl = document.getElementById('search-props');
+  var search = searchEl ? searchEl.value.toLowerCase() : '';
+  var op = document.getElementById('f-prop-op').value;
+  var type = document.getElementById('f-prop-type').value;
+  var beds = document.getElementById('f-prop-beds').value;
+  var minRaw = parseFloat(document.getElementById('f-prop-price-min').value) || 0;
+  var maxRaw = parseFloat(document.getElementById('f-prop-price-max').value) || Infinity;
+  var filterCurrency = document.getElementById('f-prop-filter-currency').value;
+
+  var minUSD = filterCurrency === '₡' ? minRaw / USD_TO_CRC : minRaw;
+  var maxUSD = filterCurrency === '₡' ? maxRaw / USD_TO_CRC : maxRaw;
+
+  var filtered = allPropsData.filter(function(item){
+    if(search && !(item.title||'').toLowerCase().includes(search) && !(item.location||'').toLowerCase().includes(search)) return false;
+    if(op !== 'Todas' && item.operation !== op) return false;
+    if(type !== 'Todas' && item.prop_type !== type) return false;
+    if(beds !== 'Todas'){
+      if(beds === '4+'){ if((item.beds||0) < 4) return false; }
+      else if((item.beds||0) !== parseInt(beds)) return false;
+    }
+    var itemUSD = priceInUSD(item);
+    if(itemUSD < minUSD || itemUSD > maxUSD) return false;
+    return true;
+  });
+
+  var pg = document.getElementById('props-grid');
+  var pc = document.getElementById('props-count');
+  if(filtered.length){
+    pg.innerHTML = filtered.map(renderPropCard).join('');
+    if(pc) pc.innerHTML = '<strong>'+filtered.length+'</strong> propiedad'+(filtered.length!==1?'es':'')+' encontrada'+(filtered.length!==1?'s':'');
+  } else {
+    pg.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted)"><i class="fas fa-building" style="font-size:40px;opacity:.3;display:block;margin-bottom:1rem"></i><p>No hay propiedades con esos filtros.</p></div>';
+    if(pc) pc.textContent = '';
+  }
+}
+
+function clearPropFilters(){
+  document.getElementById('search-props').value = '';
+  document.getElementById('f-prop-op').value = 'Todas';
+  document.getElementById('f-prop-type').value = 'Todas';
+  document.getElementById('f-prop-beds').value = 'Todas';
+  document.getElementById('f-prop-price-min').value = '';
+  document.getElementById('f-prop-price-max').value = '';
+  document.getElementById('f-prop-filter-currency').value = '$';
+  renderAllListings();
 }
 
 // ── NAVEGACIÓN ──

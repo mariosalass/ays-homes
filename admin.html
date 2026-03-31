@@ -157,11 +157,13 @@ img{display:block;max-width:100%}
   display:flex;align-items:center;justify-content:center;gap:6px;
   -webkit-tap-highlight-color:transparent;
 }
-.lc-btn:first-child{border-right:1px solid var(--border)}
+.lc-btn:not(:last-child){border-right:1px solid var(--border)}
 .lc-btn.edit{color:var(--teal)}
 .lc-btn.edit:hover{background:var(--teal-l)}
 .lc-btn.del{color:var(--red)}
 .lc-btn.del:hover{background:var(--red-l)}
+.lc-btn.feat{color:var(--gold)}
+.lc-btn.feat:hover{background:var(--gold-l)}
 
 /* ── EMPTY STATE ── */
 .empty{
@@ -772,6 +774,7 @@ function renderList(elId, items, kind){
         '</div>'+
       '</div>'+
       '<div class="lc-actions">'+
+        '<button class="lc-btn feat" onclick="toggleFeatured(\''+item.id+'\','+!!item.featured+',\''+kind+'\')"><i class="fas fa-star"></i> '+(item.featured?'Quitar destacado':'Destacar')+'</button>'+
         '<button class="lc-btn edit" onclick="editItem(\''+item.id+'\',\''+kind+'\')"><i class="fas fa-pen"></i> Editar</button>'+
         '<button class="lc-btn del" onclick="confirmDelete(\''+item.id+'\',\''+kind+'\')"><i class="fas fa-trash-can"></i> Eliminar</button>'+
       '</div>'+
@@ -1043,6 +1046,16 @@ function confirmDelete(id, type){
 }
 function closeConfirm(){
   document.getElementById('confirm-overlay').classList.remove('open');
+}
+
+// ── TOGGLE FEATURED ──
+async function toggleFeatured(id, currentVal, kind){
+  if(!sb){ showToast('Supabase no configurado','err'); return; }
+  var {error} = await sb.from('listings').update({featured: !currentVal}).eq('id', id);
+  if(error){ showToast('Error al actualizar','err'); return; }
+  showToast(!currentVal ? 'Marcado como destacado ✓' : 'Quitado de destacados ✓', 'ok');
+  if(kind==='property') await loadProps();
+  else await loadCars();
 }
 
 // ── CONFIG SAVE ──
