@@ -168,7 +168,7 @@ img{display:block;max-width:100%}
 .lc-btn.feat{color:var(--gold)}
 .lc-btn.feat:hover{background:var(--gold-l)}
 .lc-share-wrap{position:relative;flex-shrink:0}
-.lc-btn.share{color:#0ea5e9}
+.lc-btn.share{color:#0ea5e9;border-left:1px solid var(--border);padding:11px 14px;flex:none}
 .lc-btn.share:hover{background:#f0f9ff}
 .share-menu{
   display:none;position:absolute;bottom:calc(100% + 6px);right:0;
@@ -705,15 +705,19 @@ document.getElementById('pwd-input').addEventListener('keydown', function(e){
 });
 document.getElementById('btn-login').addEventListener('click', doLogin);
 
+function showApp(){
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+  initApp();
+}
+
 function doLogin(){
   var cfg = loadConfig();
   var correctPwd = cfg.adminPwd || DEFAULT_PWD;
   var val = document.getElementById('pwd-input').value;
   if(val === correctPwd){
-    document.getElementById('login-screen').style.display = 'none';
-    var app = document.getElementById('app');
-    app.classList.add('visible');
-    initApp();
+    localStorage.setItem('ays_admin_session', 'true');
+    showApp();
   } else {
     document.getElementById('login-err').style.display = 'block';
     document.getElementById('pwd-input').value = '';
@@ -722,11 +726,16 @@ function doLogin(){
 }
 
 document.getElementById('btn-logout').addEventListener('click', function(){
+  localStorage.removeItem('ays_admin_session');
   document.getElementById('app').classList.remove('visible');
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('pwd-input').value = '';
   document.getElementById('login-err').style.display = 'none';
 });
+
+if(localStorage.getItem('ays_admin_session') === 'true'){
+  showApp();
+}
 
 // ── INIT APP ──
 function initApp(){
@@ -826,8 +835,8 @@ function renderList(elId, items, kind){
         '<button class="lc-btn del" onclick="confirmDelete(\''+item.id+'\',\''+kind+'\')"><i class="fas fa-trash-can"></i> Eliminar</button>'+
         (kind==='property'
           ? '<div class="lc-share-wrap" id="sw-'+item.id+'">'
-              +'<button class="lc-btn share" onclick="toggleShareMenu(\''+item.id+'\')">'
-              +'<i class="fas fa-share-nodes"></i> Compartir</button>'
+              +'<button class="lc-btn share" onclick="toggleShareMenu(\''+item.id+'\')" title="Compartir">'
+              +'<i class="fas fa-share-nodes"></i></button>'
               +'<div class="share-menu" id="sm-'+item.id+'">'
                 +'<button onclick="copyLink(\''+item.id+'\',\'client\')"><i class="fas fa-user"></i> Link de cliente</button>'
                 +'<button onclick="copyLink(\''+item.id+'\',\'broker\')"><i class="fas fa-handshake"></i> Link de corredor</button>'
