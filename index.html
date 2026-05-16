@@ -1357,7 +1357,46 @@ async function handleHash(){
 
 window.addEventListener('hashchange', function(){ handleHash(); });
 
-handleHash();
+async function bootApp(){
+  var hash = window.location.hash.replace('#','');
+  var parts = hash.split('/');
+  var page = parts[0];
+  var id = parts[1];
+  var isDetail = (page==='propertyDetail'||page==='carDetail') && id;
+
+  if(isDetail){
+    var kind = page==='propertyDetail' ? 'property' : 'car';
+    var detPage = document.getElementById('page-'+page);
+    if(detPage){
+      detPage.classList.add('active');
+      var det = detPage.querySelector('.det-page');
+      if(det) det.innerHTML = '<div style="text-align:center;padding:5rem;color:var(--muted)">'
+        +'<div style="width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--teal);'
+        +'border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem"></div>'
+        +'<p>Cargando...</p></div>';
+    }
+    var nav = document.getElementById('navbar');
+    nav.classList.remove('dark');
+    nav.classList.add('scrolled');
+
+    var ok = initSb();
+    if(ok){
+      try{
+        var res = await sbClient.from('listings').select('*').eq('id', id).single();
+        if(!res.error && res.data){
+          activeItem = res.data;
+          renderDetailPage(res.data, kind);
+        }
+      } catch(e){ /* carga normal como fallback */ }
+    }
+
+    loadListings();
+  } else {
+    handleHash();
+  }
+}
+
+bootApp();
 </script>
 </body>
 </html>
