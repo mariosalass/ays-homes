@@ -8,6 +8,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="cr-locations.js"></script>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth;font-size:18px}
@@ -599,7 +602,8 @@ footer ul li a:hover{color:#fff}
       <div class="fg-grid">
         <div class="fg"><label>Transacción</label><select id="f-prop-op" onchange="applyPropFilters()"><option>Todas</option><option>Venta</option><option>Alquiler</option></select></div>
         <div class="fg"><label>Tipo</label><select id="f-prop-type" onchange="applyPropFilters()"><option>Todas</option><option>Casa</option><option>Apartamento</option><option>Local</option><option>Terreno</option></select></div>
-        <div class="fg"><label>Provincia</label><select><option>Todas</option><option>San José</option><option>Alajuela</option><option>Heredia</option><option>Guanacaste</option></select></div>
+        <div class="fg"><label>Provincia</label><select id="f-prop-provincia" onchange="onFilterProvinciaChange(); applyPropFilters()"><option value="">Todas</option></select></div>
+        <div class="fg"><label>Cantón</label><select id="f-prop-canton" onchange="applyPropFilters()" disabled><option value="">Todos</option></select></div>
         <div class="fg"><label>Habitaciones</label><select id="f-prop-beds" onchange="applyPropFilters()"><option>Todas</option><option>1</option><option>2</option><option>3</option><option>4+</option></select></div>
         <div class="fg"><label>Baños</label><select><option>Todos</option><option>1</option><option>2</option><option>3+</option></select></div>
         <div class="fg"><label>Parqueos</label><select><option>Todos</option><option>1</option><option>2</option><option>3+</option></select></div>
@@ -919,7 +923,31 @@ async function loadListings(){
     allPropsData = DEMO_PROPS;
     allCarsData = DEMO_CARS;
   }
+  initFilterLocationSelects();
   renderAllListings();
+}
+
+function initFilterLocationSelects(){
+  var sel = document.getElementById('f-prop-provincia');
+  if(!sel || sel.options.length > 1) return;
+  Object.keys(CR_LOCATIONS).sort().forEach(function(prov){
+    var opt = document.createElement('option');
+    opt.value = prov; opt.textContent = prov;
+    sel.appendChild(opt);
+  });
+}
+
+function onFilterProvinciaChange(){
+  var prov = document.getElementById('f-prop-provincia').value;
+  var cantonSel = document.getElementById('f-prop-canton');
+  cantonSel.innerHTML = '<option value="">Todos</option>';
+  if(!prov){ cantonSel.disabled = true; return; }
+  cantonSel.disabled = false;
+  Object.keys(CR_LOCATIONS[prov].cantones).sort().forEach(function(c){
+    var opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    cantonSel.appendChild(opt);
+  });
 }
 
 function renderAllListings(){
@@ -990,9 +1018,25 @@ function renderDetailPage(item, kind){
           (specs?'<div class="ibox"><h3>Características</h3><div class="specs-row">'+specs+'</div></div>':'')+
           (item.description?'<div class="ibox"><h3>Descripción</h3><p style="font-size:14.5px;color:var(--teal);line-height:1.75">'+escH(item.description)+'</p></div>':'')+
           (ams?'<div class="ibox"><h3>Amenidades</h3><div class="am-grid">'+ams+'</div></div>':'')+
+          (item.lat&&item.lng?'<div class="ibox"><h3><i class="fas fa-map-location-dot"></i> Ubicación</h3><div id="detail-map" style="height:280px;border-radius:14px;overflow:hidden;border:1.5px solid var(--border)"></div></div>':'')+
         '</div>'+
         '<div>'+detailContactForm('property')+'</div>'+
       '</div>';
+    if(item.lat && item.lng){
+      setTimeout(function(){
+        var dMap = L.map('detail-map', { scrollWheelZoom: false, zoomControl: true, attributionControl: false });
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(dMap);
+        var pinIcon = L.divIcon({
+          html: '<div style="width:36px;height:36px;background:#1b5e6e;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 4px 16px rgba(27,94,110,.5)"></div>',
+          iconSize: [36, 36], iconAnchor: [18, 36], className: ''
+        });
+        L.marker([item.lat, item.lng], { icon: pinIcon })
+          .bindPopup('<strong style="color:#1b5e6e">'+escH(item.title)+'</strong><br><small>'+escH(item.location||'')+'</small>')
+          .addTo(dMap).openPopup();
+        dMap.setView([item.lat, item.lng], 13);
+        dMap.flyTo([item.lat, item.lng], 13, { duration: 1.5, easeLinearity: 0.2 });
+      }, 200);
+    }
   } else {
     var det2 = document.querySelector('#page-carDetail .det-page');
     if(!det2) return;
@@ -1105,10 +1149,15 @@ function applyPropFilters(){
   var minUSD = filterCurrency === '₡' ? minRaw / USD_TO_CRC : minRaw;
   var maxUSD = filterCurrency === '₡' ? maxRaw / USD_TO_CRC : maxRaw;
 
+  var filterProv = document.getElementById('f-prop-provincia') ? document.getElementById('f-prop-provincia').value : '';
+  var filterCanton = document.getElementById('f-prop-canton') ? document.getElementById('f-prop-canton').value : '';
+
   var filtered = allPropsData.filter(function(item){
     if(search && !(item.title||'').toLowerCase().includes(search) && !(item.location||'').toLowerCase().includes(search)) return false;
     if(op !== 'Todas' && item.operation !== op) return false;
     if(type !== 'Todas' && item.prop_type !== type) return false;
+    if(filterProv && item.provincia !== filterProv) return false;
+    if(filterCanton && item.canton !== filterCanton) return false;
     if(beds !== 'Todas'){
       if(beds === '4+'){ if((item.beds||0) < 4) return false; }
       else if((item.beds||0) !== parseInt(beds)) return false;
@@ -1137,6 +1186,10 @@ function clearPropFilters(){
   document.getElementById('f-prop-price-min').value = '';
   document.getElementById('f-prop-price-max').value = '';
   document.getElementById('f-prop-filter-currency').value = '$';
+  var provSel = document.getElementById('f-prop-provincia');
+  if(provSel) provSel.value = '';
+  var cantSel = document.getElementById('f-prop-canton');
+  if(cantSel){ cantSel.innerHTML = '<option value="">Todos</option>'; cantSel.disabled = true; }
   renderAllListings();
 }
 

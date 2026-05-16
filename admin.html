@@ -7,6 +7,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="cr-locations.js"></script>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 html{font-size:16px;-webkit-text-size-adjust:100%}
@@ -505,9 +508,34 @@ img{display:block;max-width:100%}
           </select>
         </div>
       </div>
-      <div class="mf">
-        <label>Ubicación <span>*</span></label>
-        <input type="text" id="f-prop-loc" placeholder="Ej: Escazú Centro, San José">
+      <div class="mf-row">
+        <div class="mf">
+          <label>Provincia <span>*</span></label>
+          <select id="f-provincia" onchange="onProvinciaChange()">
+            <option value="">Seleccioná provincia...</option>
+          </select>
+        </div>
+        <div class="mf">
+          <label>Cantón <span>*</span></label>
+          <select id="f-canton" onchange="onCantonChange()" disabled>
+            <option value="">Primero elegí provincia</option>
+          </select>
+        </div>
+      </div>
+      <div class="mf-row">
+        <div class="mf">
+          <label>Distrito</label>
+          <select id="f-distrito" disabled>
+            <option value="">Primero elegí cantón</option>
+          </select>
+        </div>
+        <div class="mf" style="display:flex;align-items:flex-end;padding-bottom:2px">
+          <p id="loc-display" style="font-size:13px;color:var(--muted);font-style:italic">Seleccioná provincia y cantón</p>
+        </div>
+      </div>
+      <div class="mf" id="map-container" style="display:none">
+        <label>Ubicación en el mapa</label>
+        <div id="admin-map" style="height:220px;border-radius:12px;overflow:hidden;border:1.5px solid var(--border)"></div>
       </div>
       <div class="mf-row">
         <div class="mf">
@@ -797,6 +825,11 @@ function openModal(type, itemId){
 
   document.getElementById('fields-property').style.display = type==='property' ? 'block' : 'none';
   document.getElementById('fields-car').style.display = type==='car' ? 'block' : 'none';
+  if(type === 'property'){
+    initLocationSelects();
+    document.getElementById('map-container').style.display = 'none';
+    if(adminMap){ adminMap.invalidateSize(); }
+  }
   document.getElementById('modal-title').textContent = itemId
     ? (type==='property' ? 'Editar propiedad' : 'Editar auto')
     : (type==='property' ? 'Nueva propiedad' : 'Nuevo auto');
@@ -835,6 +868,16 @@ function resetForm(){
   document.getElementById('photos-preview').innerHTML = '';
   document.getElementById('upload-progress').classList.remove('show');
   renderAmenidades();
+  var pSel = document.getElementById('f-provincia');
+  if(pSel){ pSel.value = ''; }
+  var cSel = document.getElementById('f-canton');
+  if(cSel){ cSel.innerHTML = '<option value="">Primero elegí provincia</option>'; cSel.disabled = true; }
+  var dSel = document.getElementById('f-distrito');
+  if(dSel){ dSel.innerHTML = '<option value="">Primero elegí cantón</option>'; dSel.disabled = true; }
+  var mc = document.getElementById('map-container');
+  if(mc) mc.style.display = 'none';
+  var ld = document.getElementById('loc-display');
+  if(ld) ld.textContent = 'Seleccioná provincia y cantón';
 }
 
 function populateForm(item, type){
@@ -849,7 +892,19 @@ function populateForm(item, type){
   if(type==='property'){
     document.getElementById('f-prop-type').value = item.prop_type||'Casa';
     document.getElementById('f-prop-op').value = item.operation||'Venta';
-    document.getElementById('f-prop-loc').value = item.location||'';
+    initLocationSelects();
+    if(item.provincia){
+      document.getElementById('f-provincia').value = item.provincia;
+      onProvinciaChange();
+      if(item.canton){
+        document.getElementById('f-canton').value = item.canton;
+        onCantonChange();
+        if(item.distrito){
+          document.getElementById('f-distrito').value = item.distrito;
+        }
+        updateLocDisplay();
+      }
+    }
     document.getElementById('f-beds').value = item.beds||'';
     document.getElementById('f-baths').value = item.baths||'';
     document.getElementById('f-parking').value = item.parking||'';
@@ -884,6 +939,88 @@ function renderExistingPhotos(){
 function removePhoto(i){
   uploadedUrls.splice(i,1);
   renderExistingPhotos();
+}
+
+// ── UBICACIÓN CR ──
+var adminMap = null;
+var adminMarker = null;
+
+function initLocationSelects(){
+  var sel = document.getElementById('f-provincia');
+  if(!sel) return;
+  var current = sel.value;
+  sel.innerHTML = '<option value="">Seleccioná provincia...</option>';
+  Object.keys(CR_LOCATIONS).sort().forEach(function(prov){
+    var opt = document.createElement('option');
+    opt.value = prov; opt.textContent = prov;
+    sel.appendChild(opt);
+  });
+  if(current) sel.value = current;
+}
+
+function onProvinciaChange(){
+  var prov = document.getElementById('f-provincia').value;
+  var cantonSel = document.getElementById('f-canton');
+  var distrSel = document.getElementById('f-distrito');
+  cantonSel.innerHTML = '<option value="">Seleccioná cantón...</option>';
+  distrSel.innerHTML = '<option value="">Primero elegí cantón</option>';
+  distrSel.disabled = true;
+  document.getElementById('map-container').style.display = 'none';
+  if(!prov){ cantonSel.disabled = true; updateLocDisplay(); return; }
+  cantonSel.disabled = false;
+  Object.keys(CR_LOCATIONS[prov].cantones).sort().forEach(function(c){
+    var opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    cantonSel.appendChild(opt);
+  });
+  updateLocDisplay();
+  showMap(CR_LOCATIONS[prov].lat, CR_LOCATIONS[prov].lng, 9);
+}
+
+function onCantonChange(){
+  var prov = document.getElementById('f-provincia').value;
+  var canton = document.getElementById('f-canton').value;
+  var distrSel = document.getElementById('f-distrito');
+  distrSel.innerHTML = '<option value="">Seleccioná distrito...</option>';
+  if(!canton){ distrSel.disabled = true; updateLocDisplay(); return; }
+  distrSel.disabled = false;
+  var data = CR_LOCATIONS[prov].cantones[canton];
+  data.distritos.forEach(function(d){
+    var opt = document.createElement('option');
+    opt.value = d; opt.textContent = d;
+    distrSel.appendChild(opt);
+  });
+  distrSel.onchange = function(){ updateLocDisplay(); };
+  updateLocDisplay();
+  showMap(data.lat, data.lng, 12);
+}
+
+function updateLocDisplay(){
+  var prov = document.getElementById('f-provincia').value;
+  var canton = document.getElementById('f-canton').value;
+  var distrito = document.getElementById('f-distrito').value;
+  var parts = [distrito, canton, prov].filter(Boolean);
+  var ld = document.getElementById('loc-display');
+  if(ld) ld.textContent = parts.length ? parts.join(', ') : 'Seleccioná provincia y cantón';
+}
+
+function showMap(lat, lng, zoom){
+  document.getElementById('map-container').style.display = 'block';
+  var pinIcon = L.divIcon({
+    html: '<div style="width:32px;height:32px;background:#1b5e6e;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 3px 12px rgba(27,94,110,.45)"></div>',
+    iconSize: [32, 32], iconAnchor: [16, 32], className: ''
+  });
+  if(!adminMap){
+    adminMap = L.map('admin-map', { zoomControl: true, scrollWheelZoom: false, attributionControl: false });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(adminMap);
+    adminMarker = L.marker([lat, lng], { icon: pinIcon }).addTo(adminMap);
+    adminMap.setView([lat, lng], zoom);
+  } else {
+    adminMarker.setIcon(pinIcon);
+    adminMarker.setLatLng([lat, lng]);
+    adminMap.flyTo([lat, lng], zoom, { duration: 1.2, easeLinearity: 0.25 });
+  }
+  setTimeout(function(){ adminMap.invalidateSize(); }, 100);
 }
 
 // ── PHOTO HANDLING ──
@@ -990,7 +1127,17 @@ async function saveItem(){
     if(currentType==='property'){
       row.prop_type = document.getElementById('f-prop-type').value;
       row.operation = document.getElementById('f-prop-op').value;
-      row.location = document.getElementById('f-prop-loc').value.trim();
+      var prov = document.getElementById('f-provincia').value;
+      var cant = document.getElementById('f-canton').value;
+      var dist = document.getElementById('f-distrito').value;
+      row.provincia = prov;
+      row.canton = cant;
+      row.distrito = dist;
+      row.location = [dist, cant, prov].filter(Boolean).join(', ');
+      if(prov && cant && CR_LOCATIONS[prov] && CR_LOCATIONS[prov].cantones[cant]){
+        row.lat = CR_LOCATIONS[prov].cantones[cant].lat;
+        row.lng = CR_LOCATIONS[prov].cantones[cant].lng;
+      }
       row.beds = parseInt(document.getElementById('f-beds').value)||null;
       row.baths = parseInt(document.getElementById('f-baths').value)||null;
       row.parking = parseInt(document.getElementById('f-parking').value)||null;
