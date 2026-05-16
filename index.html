@@ -547,7 +547,6 @@ footer ul li a:hover{color:#fff}
           <p class="s-label">Quiénes somos</p>
           <h2 class="s-title">Tu socio de confianza en soluciones comerciales</h2>
           <p><strong>AyS Soluciones Comerciales</strong> es una empresa fundada por Adrián Salas y Susy Bazo, agentes inmobiliarios comprometidos con ayudar a personas a comprar, vender y alquilar propiedades, vender autos y conseguir soluciones de financiamiento.</p>
-          <p>Trabajamos a comisión, generalmente alrededor del <strong>5% del valor de la operación</strong>, acompañándote en todo el proceso.</p>
           <div class="avals">
             <div class="av"><div class="av-icon"><i class="fas fa-shield-halved"></i></div><h4>Confianza</h4><p>Transparencia en cada transacción</p></div>
             <div class="av"><div class="av-icon"><i class="fas fa-users"></i></div><h4>Experiencia</h4><p>Años en el mercado</p></div>
@@ -702,7 +701,6 @@ footer ul li a:hover{color:#fff}
 <!-- ===== MANAGEMENT ===== -->
 <div class="page" id="page-management">
   <div class="pg-hero"><div class="pg-icon"><i class="fas fa-briefcase"></i></div><h1>Gestionamos tu Propiedad, Vehículo o INVU</h1><p>Dejá en nuestras manos la venta o alquiler de tu propiedad, la venta de tu vehículo, o la gestión de tu crédito/plan maduro del INVU</p></div>
-  <div class="cm-bar"><p>Trabajamos a comisión: <strong>Aproximadamente 5% del valor de la operación</strong></p></div>
   <div class="section s-bg">
     <div class="tc"><h2 class="s-title">¿Qué podemos gestionar por vos?</h2><p class="s-sub">Nos encargamos de todo el proceso para que vos no tengas que preocuparte</p></div>
     <div class="mg-grid" style="margin-top:2.5rem">
@@ -738,7 +736,6 @@ footer ul li a:hover{color:#fff}
         <p><strong>AyS Soluciones Comerciales</strong> nació de la visión compartida de Adrián Salas y Susy Bazo: ofrecer un servicio inmobiliario diferente, basado en la confianza, la transparencia y el acompañamiento genuino.</p>
         <p>Con años de experiencia en el mercado inmobiliario costarricense, entendemos que comprar, vender o alquilar una propiedad es una de las decisiones más importantes en la vida de una persona.</p>
         <p>Además de propiedades, ofrecemos servicios de venta de vehículos y soluciones de financiamiento a través de prestamistas privados y asesoría en créditos/planes maduros del INVU.</p>
-        <div class="cb"><h4>Nuestro compromiso</h4><p>Trabajamos a comisión (generalmente alrededor del 5%), lo que significa que nuestro éxito depende del tuyo. Solo ganamos cuando vos ganás.</p></div>
       </div>
     </div>
   </div>
@@ -786,8 +783,8 @@ footer ul li a:hover{color:#fff}
 <script>
 // ── SUPABASE CONFIG ──
 // Pegá tu URL y clave acá (se sincronizan con admin.html via localStorage)
-var SB_URL = '';
-var SB_KEY = '';
+var SB_URL = 'https://mlrglzzxrfvbkucrtffd.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1scmdsenp4cmZ2Ymt1Y3J0ZmZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5MDc1MTQsImV4cCI6MjA5MDQ4MzUxNH0.MI3N5PR3IkAYgBT1cHOQhxdQDcwziMWLzt3zjuLWTZM';
 var sbClient = null;
 var activeItem = null; // item abierto en detalle
 
@@ -957,7 +954,9 @@ function openDetail(id, kind){
   if(!item) return;
   activeItem = item;
   renderDetailPage(item, kind);
-  go(kind==='property' ? 'propertyDetail' : 'carDetail');
+  var detPage = kind==='property' ? 'propertyDetail' : 'carDetail';
+  window.location.hash = detPage + '/' + id;
+  go(detPage, false);
 }
 
 function renderDetailPage(item, kind){
@@ -1142,7 +1141,7 @@ function clearPropFilters(){
 }
 
 // ── NAVEGACIÓN ──
-function go(page){
+function go(page, pushState){
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
   document.getElementById('page-'+page).classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
@@ -1153,6 +1152,9 @@ function go(page){
     navBtn.setAttribute('aria-expanded','false');
     navBtn.innerHTML = '<i class="fas fa-bars"></i>';
   }
+  if(pushState !== false){
+    window.location.hash = page;
+  }
   if(page==='home'){
     nav.classList.add('dark');
     nav.classList.remove('scrolled');
@@ -1160,7 +1162,6 @@ function go(page){
     nav.classList.remove('dark');
     nav.classList.add('scrolled');
   }
-  // Reload listings when visiting those pages (fresh data)
   if(page==='properties'||page==='cars') loadListings();
 }
 
@@ -1283,7 +1284,27 @@ function injectFooterToPages(){
 }
 injectFooterToPages();
 
-loadListings();
+async function handleHash(){
+  var hash = window.location.hash.replace('#','');
+  if(!hash || hash==='home'){ go('home', false); return; }
+  var parts = hash.split('/');
+  var page = parts[0];
+  var id = parts[1];
+  if((page==='propertyDetail'||page==='carDetail') && id){
+    await loadListings();
+    var kind = page==='propertyDetail' ? 'property' : 'car';
+    var items = kind==='property' ? allPropsData : allCarsData;
+    var item = items.find(function(i){ return i.id===id; });
+    if(item){ openDetail(id, kind); return; }
+  }
+  var validPages = ['home','properties','cars','propertyDetail','carDetail','about','contact'];
+  if(validPages.includes(page)){ go(page, false); }
+  else { go('home', false); }
+}
+
+window.addEventListener('hashchange', function(){ handleHash(); });
+
+handleHash();
 </script>
 </body>
 </html>
