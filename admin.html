@@ -167,6 +167,25 @@ img{display:block;max-width:100%}
 .lc-btn.del:hover{background:var(--red-l)}
 .lc-btn.feat{color:var(--gold)}
 .lc-btn.feat:hover{background:var(--gold-l)}
+.lc-share-wrap{position:relative;flex-shrink:0}
+.lc-btn.share{color:#0ea5e9}
+.lc-btn.share:hover{background:#f0f9ff}
+.share-menu{
+  display:none;position:absolute;bottom:calc(100% + 6px);right:0;
+  background:#fff;border:1.5px solid var(--border);border-radius:12px;
+  box-shadow:0 8px 24px rgba(0,0,0,.12);overflow:hidden;min-width:180px;z-index:50;
+}
+.share-menu.open{display:block}
+.share-menu button{
+  width:100%;padding:12px 16px;border:none;background:none;
+  font-size:14px;font-weight:600;color:var(--text);cursor:pointer;
+  display:flex;align-items:center;gap:9px;transition:background .15s;
+  font-family:inherit;
+}
+.share-menu button:hover{background:var(--teal-l);color:var(--teal)}
+.share-menu button:first-child{border-bottom:1px solid var(--border)}
+.share-menu button .fa-user{color:#0ea5e9}
+.share-menu button .fa-handshake{color:#8b5cf6}
 
 /* ── EMPTY STATE ── */
 .empty{
@@ -805,6 +824,16 @@ function renderList(elId, items, kind){
         '<button class="lc-btn feat" onclick="toggleFeatured(\''+item.id+'\','+!!item.featured+',\''+kind+'\')"><i class="fas fa-star"></i> '+(item.featured?'Quitar destacado':'Destacar')+'</button>'+
         '<button class="lc-btn edit" onclick="editItem(\''+item.id+'\',\''+kind+'\')"><i class="fas fa-pen"></i> Editar</button>'+
         '<button class="lc-btn del" onclick="confirmDelete(\''+item.id+'\',\''+kind+'\')"><i class="fas fa-trash-can"></i> Eliminar</button>'+
+        (kind==='property'
+          ? '<div class="lc-share-wrap" id="sw-'+item.id+'">'
+              +'<button class="lc-btn share" onclick="toggleShareMenu(\''+item.id+'\')">'
+              +'<i class="fas fa-share-nodes"></i> Compartir</button>'
+              +'<div class="share-menu" id="sm-'+item.id+'">'
+                +'<button onclick="copyLink(\''+item.id+'\',\'client\')"><i class="fas fa-user"></i> Link de cliente</button>'
+                +'<button onclick="copyLink(\''+item.id+'\',\'broker\')"><i class="fas fa-handshake"></i> Link de corredor</button>'
+              +'</div>'
+            +'</div>'
+          : '')+
       '</div>'+
     '</div>';
   }).join('');
@@ -812,6 +841,31 @@ function renderList(elId, items, kind){
 
 function renderEmpty(elId, icon, msg){
   document.getElementById(elId).innerHTML = '<div class="empty"><i class="fas fa-'+icon+'"></i><p>'+msg+'</p></div>';
+}
+
+function toggleShareMenu(id){
+  document.querySelectorAll('.share-menu').forEach(function(m){
+    if(m.id !== 'sm-'+id) m.classList.remove('open');
+  });
+  document.getElementById('sm-'+id).classList.toggle('open');
+}
+
+function copyLink(id, mode){
+  var base = window.location.origin + window.location.pathname.replace('admin.html','');
+  var url = base + 'ficha.html?id='+id+'&mode='+mode;
+  navigator.clipboard.writeText(url).then(function(){
+    document.querySelectorAll('.share-menu').forEach(function(m){ m.classList.remove('open'); });
+    showToast(mode==='client' ? 'Link de cliente copiado ✓' : 'Link de corredor copiado ✓', 'ok');
+  }).catch(function(){
+    var ta = document.createElement('textarea');
+    ta.value = url;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    document.querySelectorAll('.share-menu').forEach(function(m){ m.classList.remove('open'); });
+    showToast(mode==='client' ? 'Link de cliente copiado ✓' : 'Link de corredor copiado ✓', 'ok');
+  });
 }
 
 // ── MODAL ──
@@ -1236,6 +1290,11 @@ function showToast(msg, type){
   clearTimeout(toastTimer);
   toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 3000);
 }
+
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.lc-share-wrap'))
+    document.querySelectorAll('.share-menu').forEach(function(m){ m.classList.remove('open'); });
+});
 
 // ── HELPERS ──
 function esc(s){ var d=document.createElement('div');d.textContent=s;return d.innerHTML; }
