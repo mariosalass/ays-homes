@@ -1365,7 +1365,7 @@ async function bootApp(){
   var isDetail = (page==='propertyDetail'||page==='carDetail') && id;
 
   if(isDetail){
-    var kind = page==='propertyDetail' ? 'property' : 'car';
+    document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
     var detPage = document.getElementById('page-'+page);
     if(detPage){
       detPage.classList.add('active');
@@ -1378,22 +1378,10 @@ async function bootApp(){
     var nav = document.getElementById('navbar');
     nav.classList.remove('dark');
     nav.classList.add('scrolled');
-
-    var ok = initSb();
-    if(ok){
-      try{
-        var res = await sbClient.from('listings').select('*').eq('id', id).single();
-        if(!res.error && res.data){
-          activeItem = res.data;
-          renderDetailPage(res.data, kind);
-        }
-      } catch(e){ /* carga normal como fallback */ }
-    }
-
-    loadListings();
-  } else {
-    handleHash();
   }
+
+  await loadListings();
+  handleHash();
 }
 
 bootApp();
