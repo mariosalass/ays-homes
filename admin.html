@@ -667,6 +667,13 @@ img{display:block;max-width:100%}
 <div class="toast" id="toast"></div>
 
 <script>
+// ── SESIÓN: verificar antes de renderizar cualquier cosa ──
+var _hasSession = localStorage.getItem('ays_admin_session') === 'true';
+if(_hasSession){
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+}
+
 // ── CONFIG PERSISTENCE ──
 var CFG_KEY = 'ays_admin_config';
 function loadConfig(){
@@ -732,10 +739,6 @@ document.getElementById('btn-logout').addEventListener('click', function(){
   document.getElementById('pwd-input').value = '';
   document.getElementById('login-err').style.display = 'none';
 });
-
-if(localStorage.getItem('ays_admin_session') === 'true'){
-  showApp();
-}
 
 // ── INIT APP ──
 function initApp(){
@@ -1313,6 +1316,9 @@ function fmtPrice(p){
   if(isNaN(n)) return p;
   return n.toLocaleString('es-CR');
 }
+
+// Llamar initApp si había sesión guardada (todas las funciones ya definidas)
+if(_hasSession){ initApp(); }
 </script>
 </body>
 </html>
