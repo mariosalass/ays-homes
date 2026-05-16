@@ -224,7 +224,7 @@ function renderFicha(item, mode){
       (item.description ? '<div class="ibox"><h3>Descripción</h3><p>'+escH(item.description)+'</p></div>' : '')+
       (ams ? '<div class="ibox"><h3>Amenidades</h3>'+ams+'</div>' : '')+
       mapHtml+
-      waBtn+
+      (!isBroker ? waBtn : '')+
     '</div>';
 
   // Thumbnails debajo del hero
