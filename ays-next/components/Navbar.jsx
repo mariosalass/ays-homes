@@ -30,7 +30,10 @@ export default function Navbar() {
   useEffect(() => setMenuOpen(false), [pathname]);
 
   const isScrolled = scrolled || !isHome;
-  const navClass = [isScrolled ? 'scrolled' : 'dark', menuOpen ? 'menu-open' : ''].filter(Boolean).join(' ');
+  const navClass = [
+    isScrolled ? 'scrolled' : 'dark',
+    menuOpen ? 'menu-open' : '',
+  ].filter(Boolean).join(' ');
 
   const isActive = (href) => href === '/' ? pathname === '/' : pathname.startsWith(href);
 
@@ -38,9 +41,9 @@ export default function Navbar() {
     <nav id="navbar" className={navClass}>
       <Link className="nav-brand" href="/">
         <div className="nav-logo">AyS</div>
-        <div>
-          <p className="nb-h1">AyS</p>
-          <p className="nb-p">Soluciones Comerciales</p>
+        <div className="nav-brand-text">
+          <span className="nb-h1">AyS</span>
+          <span className="nb-p">Soluciones Comerciales</span>
         </div>
       </Link>
 
@@ -58,7 +61,7 @@ export default function Navbar() {
 
       <button
         className="nav-menu-btn"
-        aria-label="Abrir menú"
+        aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
         aria-expanded={menuOpen}
         onClick={() => setMenuOpen(!menuOpen)}
       >
