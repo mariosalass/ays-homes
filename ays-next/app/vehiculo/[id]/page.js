@@ -9,16 +9,17 @@ function fmtPrice(p) {
   return isNaN(n) ? p || '' : n.toLocaleString('es-CR');
 }
 
+function currency(c) { return c === '₡' ? 'CRC' : 'USD'; }
+
 export async function generateMetadata({ params }) {
   const sb = createSupabaseClient();
   const { data: item } = await sb.from('listings').select('title,description,photos,brand,year,currency,price').eq('id', params.id).single();
   if (!item) return { title: 'Vehículo · AyS' };
 
-  console.log('[og:image debug] vehiculo', params.id, '| campos:', Object.keys(item), '| photos:', item.photos);
-
-  const title = `${item.title} · AyS Soluciones Comerciales`;
+  const model = item.title || item.brand || 'Vehículo';
+  const title = `${item.brand ? item.brand + ' ' : ''}${model}${item.year ? ' ' + item.year : ''} en venta — ${item.currency || '$'}${fmtPrice(item.price)} | AyS`;
   const desc = (item.description || '').slice(0, 155)
-    || `${item.brand || 'Auto'} ${item.year || ''} en venta. Precio: ${item.currency || '$'}${fmtPrice(item.price)}`;
+    || `${item.brand || 'Auto'} ${model}${item.year ? ' ' + item.year : ''} en venta. Precio: ${item.currency || '$'}${fmtPrice(item.price)}`;
   const img = item.photos?.[0] || '';
 
   return {
@@ -36,8 +37,22 @@ export default async function VehiculoPage({ params }) {
 
   const photos = item.photos || [];
 
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'Vehicle',
+    name: item.title,
+    description: item.description || undefined,
+    url: `https://ays.homes/vehiculo/${params.id}`,
+    image: photos[0] ? [photos[0]] : undefined,
+    brand: item.brand ? { '@type': 'Brand', name: item.brand } : undefined,
+    vehicleModelDate: item.year || undefined,
+    mileageFromOdometer: item.km ? { '@type': 'QuantitativeValue', value: item.km } : undefined,
+    offers: { '@type': 'Offer', price: item.price, priceCurrency: currency(item.currency) },
+  };
+
   return (
     <PageLayout>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       <div className="det-page">
         <Lightbox photos={photos} />
         {item.year && (

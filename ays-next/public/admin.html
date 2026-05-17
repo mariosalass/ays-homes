@@ -402,6 +402,10 @@ img{display:block;max-width:100%}
       <i class="fas fa-car"></i> Autos
       <span class="tab-count" id="cnt-cars">0</span>
     </div>
+    <div class="tab" data-tab="negocios" onclick="switchTab('negocios')">
+      <i class="fas fa-store"></i> Negocios
+      <span class="tab-count" id="cnt-biz">0</span>
+    </div>
     <div class="tab" data-tab="config" onclick="switchTab('config')">
       <i class="fas fa-cog"></i> Config
     </div>
@@ -434,6 +438,17 @@ img{display:block;max-width:100%}
         </button>
       </div>
       <div id="cars-list"></div>
+    </div>
+
+    <!-- NEGOCIOS TAB -->
+    <div id="tab-negocios" style="display:none">
+      <div class="sec-head">
+        <h2>Negocios</h2>
+        <button class="btn-new" onclick="openModal('business')">
+          <i class="fas fa-plus"></i> Nuevo negocio
+        </button>
+      </div>
+      <div id="biz-list"></div>
     </div>
 
     <!-- CONFIG TAB -->
@@ -620,6 +635,63 @@ img{display:block;max-width:100%}
       </div>
     </div>
 
+    <!-- Campos negocio -->
+    <div id="fields-business" style="display:none">
+      <div class="mf-row">
+        <div class="mf">
+          <label>Sector</label>
+          <select id="f-biz-sector">
+            <option value="Alimentación">Alimentación</option>
+            <option value="Agro/Producción">Agro/Producción</option>
+            <option value="Comercio">Comercio</option>
+            <option value="Servicios">Servicios</option>
+            <option value="Tecnología">Tecnología</option>
+            <option value="Turismo">Turismo</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div class="mf">
+          <label>Operación</label>
+          <select id="f-biz-op">
+            <option value="Venta">Venta</option>
+            <option value="Traspaso">Traspaso</option>
+            <option value="Sociedad">Sociedad</option>
+            <option value="Franquicia">Franquicia</option>
+          </select>
+        </div>
+      </div>
+      <div class="mf">
+        <label>Tipo de negocio</label>
+        <input type="text" id="f-biz-type" placeholder="Ej: Restaurante, Tienda, Taller...">
+      </div>
+      <div class="mf-row">
+        <div class="mf">
+          <label>Provincia</label>
+          <select id="f-biz-provincia" onchange="onBizProvinciaChange()">
+            <option value="">Seleccioná provincia...</option>
+          </select>
+        </div>
+        <div class="mf">
+          <label>Cantón</label>
+          <select id="f-biz-canton" disabled>
+            <option value="">Primero elegí provincia</option>
+          </select>
+        </div>
+      </div>
+      <div class="mf">
+        <label>Ingresos aproximados (opcional)</label>
+        <input type="text" id="f-biz-income" placeholder="Ej: ₡800,000/mes">
+      </div>
+      <div class="mf">
+        <label>Motivo de venta (opcional)</label>
+        <input type="text" id="f-biz-reason" placeholder="Ej: Retiro del propietario">
+      </div>
+      <div class="mf">
+        <label>¿Qué incluye la venta? (opcional)</label>
+        <textarea id="f-biz-includes" placeholder="Ej: Mobiliario, equipos, inventario inicial, clientela..."></textarea>
+      </div>
+    </div>
+
     <!-- Descripción y amenidades -->
     <div class="mf">
       <label>Descripción</label>
@@ -697,7 +769,7 @@ function initSupabase(){
 
 // ── STATE ──
 var currentTab = 'propiedades';
-var currentType = 'property'; // 'property' | 'car'
+var currentType = 'property'; // 'property' | 'car' | 'business'
 var editingId = null;
 var pendingPhotos = []; // {file, url, uploaded}
 var uploadedUrls = []; // final urls after upload
@@ -705,6 +777,7 @@ var amenidades = [];
 var confirmCallback = null;
 var allProps = [];
 var allCars = [];
+var allBiz = [];
 
 // ── LOGIN ──
 document.getElementById('pwd-input').addEventListener('keydown', function(e){
@@ -762,14 +835,29 @@ function switchTab(tab){
   document.querySelectorAll('.tab').forEach(function(t){
     t.classList.toggle('active', t.dataset.tab === tab);
   });
-  ['propiedades','autos','config'].forEach(function(t){
+  ['propiedades','autos','negocios','config'].forEach(function(t){
     document.getElementById('tab-'+t).style.display = t===tab ? 'block' : 'none';
   });
 }
 
 // ── LOAD DATA ──
 async function loadAll(){
-  await Promise.all([loadProps(), loadCars()]);
+  await Promise.all([loadProps(), loadCars(), loadBiz()]);
+}
+
+async function loadBiz(){
+  var listEl = document.getElementById('biz-list');
+  listEl.innerHTML = '<div class="loading"><div class="spinner"></div><p>Cargando...</p></div>';
+  if(!sb){ renderEmpty('biz-list','store','Configurá Supabase primero.'); return; }
+  try{
+    var {data,error} = await sb.from('listings').select('*').eq('kind','business').order('created_at',{ascending:false});
+    if(error) throw error;
+    allBiz = data||[];
+    document.getElementById('cnt-biz').textContent = allBiz.length;
+    renderList('biz-list', allBiz, 'business');
+  }catch(e){
+    listEl.innerHTML = '<div class="empty"><i class="fas fa-circle-exclamation"></i><p>Error cargando negocios.</p></div>';
+  }
 }
 
 async function loadProps(){
@@ -805,22 +893,22 @@ async function loadCars(){
 // ── RENDER LIST ──
 function renderList(elId, items, kind){
   var el = document.getElementById(elId);
-  if(!items.length){
-    renderEmpty(elId, kind==='car'?'car':'building',
-      kind==='car' ? 'No hay autos publicados. ¡Agregá uno!' : 'No hay propiedades publicadas. ¡Agregá una!');
-    return;
-  }
+  var emptyIco = kind==='car' ? 'car' : kind==='business' ? 'store' : 'building';
+  var emptyMsg = kind==='car' ? 'No hay autos publicados. ¡Agregá uno!' : kind==='business' ? 'No hay negocios publicados. ¡Agregá uno!' : 'No hay propiedades publicadas. ¡Agregá una!';
+  if(!items.length){ renderEmpty(elId, emptyIco, emptyMsg); return; }
   el.innerHTML = items.map(function(item){
     var img = (item.photos && item.photos.length) ? item.photos[0] : '';
     var badges = '';
     if(kind==='property'){
       badges += '<span class="lc-badge lb-'+(item.operation||'venta').toLowerCase()+'">'+(item.operation||'Venta')+'</span>';
+    } else if(kind==='business'){
+      badges += '<span class="lc-badge lb-auto">'+(item.operation||'Negocio')+'</span>';
     } else {
       badges += '<span class="lc-badge lb-auto">'+(item.year||'Auto')+'</span>';
     }
     if(item.featured) badges += '<span class="lc-badge lb-destacado">Destacado</span>';
 
-    var loc = kind==='property' ? (item.location||'') : ((item.brand||'')+(item.year?' · '+item.year:''));
+    var loc = kind==='property' ? (item.location||'') : kind==='business' ? ((item.sector||'')+(item.business_type?' · '+item.business_type:'')) : ((item.brand||'')+(item.year?' · '+item.year:''));
 
     return '<div class="listing-card">'+
       '<div class="lc-inner">'+
@@ -889,18 +977,19 @@ function openModal(type, itemId){
   resetForm();
 
   document.getElementById('fields-property').style.display = type==='property' ? 'block' : 'none';
-  document.getElementById('fields-car').style.display = type==='car' ? 'block' : 'none';
+  document.getElementById('fields-car').style.display      = type==='car'      ? 'block' : 'none';
+  document.getElementById('fields-business').style.display = type==='business' ? 'block' : 'none';
   if(type === 'property'){
     initLocationSelects();
     document.getElementById('map-container').style.display = 'none';
     if(adminMap){ adminMap.invalidateSize(); }
   }
-  document.getElementById('modal-title').textContent = itemId
-    ? (type==='property' ? 'Editar propiedad' : 'Editar auto')
-    : (type==='property' ? 'Nueva propiedad' : 'Nuevo auto');
+  if(type === 'business') initBizLocationSelects();
+  var titles = { property: ['Nueva propiedad','Editar propiedad'], car: ['Nuevo auto','Editar auto'], business: ['Nuevo negocio','Editar negocio'] };
+  document.getElementById('modal-title').textContent = (titles[type]||titles.property)[itemId?1:0];
 
   if(itemId){
-    var items = type==='property' ? allProps : allCars;
+    var items = type==='property' ? allProps : type==='business' ? allBiz : allCars;
     var item = items.find(function(i){ return i.id===itemId; });
     if(item) populateForm(item, type);
   }
@@ -920,7 +1009,8 @@ function handleOverlayClick(e){
 
 function resetForm(){
   ['f-title','f-price','f-desc','f-beds','f-baths','f-parking','f-area',
-   'f-car-brand','f-car-year','f-car-km','f-car-color'].forEach(function(id){
+   'f-car-brand','f-car-year','f-car-km','f-car-color',
+   'f-biz-type','f-biz-income','f-biz-reason','f-biz-includes'].forEach(function(id){
     var el = document.getElementById(id);
     if(el) el.value = '';
   });
@@ -974,6 +1064,19 @@ function populateForm(item, type){
     document.getElementById('f-baths').value = item.baths||'';
     document.getElementById('f-parking').value = item.parking||'';
     document.getElementById('f-area').value = item.area||'';
+  } else if(type==='business'){
+    document.getElementById('f-biz-sector').value   = item.sector||'Comercio';
+    document.getElementById('f-biz-op').value       = item.operation||'Venta';
+    document.getElementById('f-biz-type').value     = item.business_type||'';
+    document.getElementById('f-biz-income').value   = item.income||'';
+    document.getElementById('f-biz-reason').value   = item.sale_reason||'';
+    document.getElementById('f-biz-includes').value = item.includes||'';
+    initBizLocationSelects();
+    if(item.provincia){
+      document.getElementById('f-biz-provincia').value = item.provincia;
+      onBizProvinciaChange();
+      if(item.canton) document.getElementById('f-biz-canton').value = item.canton;
+    }
   } else {
     document.getElementById('f-car-brand').value = item.brand||'';
     document.getElementById('f-car-year').value = item.year||'';
@@ -1068,6 +1171,28 @@ function updateLocDisplay(){
   var parts = [distrito, canton, prov].filter(Boolean);
   var ld = document.getElementById('loc-display');
   if(ld) ld.textContent = parts.length ? parts.join(', ') : 'Seleccioná provincia y cantón';
+}
+
+function initBizLocationSelects(){
+  if(typeof CR_LOCATIONS === 'undefined') return;
+  var pSel = document.getElementById('f-biz-provincia');
+  pSel.innerHTML = '<option value="">Seleccioná provincia...</option>';
+  Object.keys(CR_LOCATIONS).forEach(function(p){
+    var o = document.createElement('option'); o.value = p; o.textContent = p; pSel.appendChild(o);
+  });
+  document.getElementById('f-biz-canton').innerHTML = '<option value="">Primero elegí provincia</option>';
+  document.getElementById('f-biz-canton').disabled = true;
+}
+
+function onBizProvinciaChange(){
+  var prov = document.getElementById('f-biz-provincia').value;
+  var cSel = document.getElementById('f-biz-canton');
+  cSel.innerHTML = '<option value="">Seleccioná cantón...</option>';
+  if(!prov || !CR_LOCATIONS[prov]){ cSel.disabled = true; return; }
+  cSel.disabled = false;
+  Object.keys(CR_LOCATIONS[prov].cantones).forEach(function(c){
+    var o = document.createElement('option'); o.value = c; o.textContent = c; cSel.appendChild(o);
+  });
 }
 
 function showMap(lat, lng, zoom){
@@ -1216,6 +1341,21 @@ async function saveItem(){
       row.baths = parseInt(document.getElementById('f-baths').value)||null;
       row.parking = parseInt(document.getElementById('f-parking').value)||null;
       row.area = parseInt(document.getElementById('f-area').value)||null;
+    } else if(currentType==='business'){
+      row.sector        = document.getElementById('f-biz-sector').value;
+      row.operation     = document.getElementById('f-biz-op').value;
+      row.business_type = document.getElementById('f-biz-type').value.trim();
+      row.income        = document.getElementById('f-biz-income').value.trim();
+      row.sale_reason   = document.getElementById('f-biz-reason').value.trim();
+      row.includes      = document.getElementById('f-biz-includes').value.trim();
+      var bp = document.getElementById('f-biz-provincia').value;
+      var bc = document.getElementById('f-biz-canton').value;
+      row.provincia = bp; row.canton = bc;
+      row.location = [bc, bp].filter(Boolean).join(', ');
+      if(bp && bc && CR_LOCATIONS[bp] && CR_LOCATIONS[bp].cantones[bc]){
+        row.lat = CR_LOCATIONS[bp].cantones[bc].lat;
+        row.lng = CR_LOCATIONS[bp].cantones[bc].lng;
+      }
     } else {
       row.brand = document.getElementById('f-car-brand').value.trim();
       row.year = document.getElementById('f-car-year').value.trim();
@@ -1237,6 +1377,7 @@ async function saveItem(){
     showToast(editingId ? 'Publicación actualizada ✓' : 'Publicación creada ✓','ok');
     closeModal();
     if(currentType==='property') await loadProps();
+    else if(currentType==='business') await loadBiz();
     else await loadCars();
 
   }catch(e){
@@ -1260,6 +1401,7 @@ function confirmDelete(id, type){
     if(error){ showToast('Error al eliminar','err'); return; }
     showToast('Eliminado ✓','ok');
     if(type==='property') await loadProps();
+    else if(type==='business') await loadBiz();
     else await loadCars();
   };
   document.getElementById('confirm-overlay').classList.add('open');
@@ -1276,6 +1418,7 @@ async function toggleFeatured(id, currentVal, kind){
   if(error){ showToast('Error al actualizar','err'); return; }
   showToast(!currentVal ? 'Marcado como destacado ✓' : 'Quitado de destacados ✓', 'ok');
   if(kind==='property') await loadProps();
+  else if(kind==='business') await loadBiz();
   else await loadCars();
 }
 

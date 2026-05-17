@@ -9,16 +9,17 @@ function fmtPrice(p) {
   return isNaN(n) ? p || '' : n.toLocaleString('es-CR');
 }
 
+function currency(c) { return c === '₡' ? 'CRC' : 'USD'; }
+
 export async function generateMetadata({ params }) {
   const sb = createSupabaseClient();
-  const { data: item } = await sb.from('listings').select('title,description,photos,prop_type,operation,location,currency,price').eq('id', params.id).single();
+  const { data: item } = await sb.from('listings').select('title,description,photos,prop_type,operation,location,currency,price,provincia,canton,distrito').eq('id', params.id).single();
   if (!item) return { title: 'Propiedad · AyS' };
 
-  console.log('[og:image debug] propiedad', params.id, '| campos:', Object.keys(item), '| photos:', item.photos);
-
-  const title = `${item.title} · AyS Soluciones Comerciales`;
+  const loc = [item.distrito, item.canton, item.provincia].filter(Boolean).join(', ') || item.location || 'Costa Rica';
+  const title = `${item.prop_type || 'Propiedad'} en ${item.operation || 'venta'} en ${loc} — ${item.currency || '$'}${fmtPrice(item.price)} | AyS`;
   const desc = (item.description || '').slice(0, 155)
-    || `${item.prop_type || 'Propiedad'} en ${item.operation || 'venta'} en ${item.location || 'Costa Rica'}. Precio: ${item.currency || '$'}${fmtPrice(item.price)}`;
+    || `${item.prop_type || 'Propiedad'} en ${item.operation || 'venta'} en ${loc}. Precio: ${item.currency || '$'}${fmtPrice(item.price)}`;
   const img = item.photos?.[0] || '';
 
   return {
@@ -37,8 +38,20 @@ export default async function PropiedadPage({ params }) {
   const photos = item.photos || [];
   const opClass = item.operation === 'Alquiler' ? 'b-rent' : 'b-sale';
 
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'RealEstateListing',
+    name: item.title,
+    description: item.description || undefined,
+    url: `https://ays.homes/propiedad/${params.id}`,
+    image: photos[0] ? [photos[0]] : undefined,
+    offers: { '@type': 'Offer', price: item.price, priceCurrency: currency(item.currency) },
+    address: { '@type': 'PostalAddress', addressLocality: item.canton || item.location, addressRegion: item.provincia, addressCountry: 'CR' },
+  };
+
   return (
     <PageLayout>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       <div className="det-page">
         <Lightbox photos={photos} />
         {photos.length > 0 && (
