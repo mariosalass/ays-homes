@@ -147,6 +147,7 @@ img{display:block;max-width:100%}
 .lb-alquiler{background:#fef3c7;color:#b45309}
 .lb-destacado{background:var(--gold-l);color:var(--gold)}
 .lb-auto{background:#f3e8ff;color:#7c3aed}
+.lb-sector{background:#ede9fe;color:#5b21b6}
 .lb-inactivo{background:#f1f5f9;color:#94a3b8}
 .lc-title{font-size:15px;font-weight:700;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lc-loc{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:4px;margin-bottom:5px}
@@ -903,13 +904,13 @@ function renderList(elId, items, kind){
       badges += '<span class="lc-badge lb-'+(item.operation||'venta').toLowerCase()+'">'+(item.operation||'Venta')+'</span>';
     } else if(kind==='business'){
       badges += '<span class="lc-badge lb-auto">'+(item.operation||'Negocio')+'</span>';
-      if(item.sector) badges += '<span class="lc-badge lb-destacado">'+item.sector+'</span>';
+      if(item.sector) badges += '<span class="lc-badge lb-sector">'+item.sector+'</span>';
     } else {
       badges += '<span class="lc-badge lb-auto">'+(item.year||'Auto')+'</span>';
     }
     if(item.featured) badges += '<span class="lc-badge lb-destacado">Destacado</span>';
 
-    var loc = kind==='property' ? (item.location||'') : kind==='business' ? (item.location || [item.canton, item.provincia].filter(Boolean).join(', ')) : ((item.brand||'')+(item.year?' · '+item.year:''));
+    var loc = kind==='property' ? (item.location||'') : kind==='business' ? (item.canton && item.provincia ? item.canton+', '+item.provincia : (item.canton||item.provincia||'')) : ((item.brand||'')+(item.year?' · '+item.year:''));
 
     return '<div class="listing-card">'+
       '<div class="lc-inner">'+
