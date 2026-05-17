@@ -862,8 +862,8 @@ function toggleShareMenu(id){
 
 function copyLink(id, mode){
   var url = mode === 'client'
-    ? 'https://ays.homes/ficha.html?id='+id+'&mode=client'
-    : 'https://cr-prop-fichas.fyi/ficha.html?id='+id+'&mode=broker';
+    ? 'https://ays.homes/ficha/'+id+'?mode=client'
+    : 'https://cr-prop-fichas.fyi/ficha/'+id+'?mode=broker';
   navigator.clipboard.writeText(url).then(function(){
     document.querySelectorAll('.share-menu').forEach(function(m){ m.classList.remove('open'); });
     showToast(mode==='client' ? 'Link de cliente copiado ✓' : 'Link de corredor copiado ✓', 'ok');
