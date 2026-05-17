@@ -129,7 +129,7 @@ export default async function NegocioPage({ params }) {
               </div>
             )}
           </div>
-          <DetailContactForm item={item} />
+          <DetailContactForm item={{ ...item, kind: 'business' }} />
         </div>
       </div>
     </PageLayout>

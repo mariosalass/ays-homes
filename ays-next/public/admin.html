@@ -914,7 +914,7 @@ function renderList(elId, items, kind){
 
     return '<div class="listing-card">'+
       '<div class="lc-inner">'+
-        '<div class="lc-img">'+(img?'<img src="'+img+'" loading="lazy">':'<div class="no-img"><i class="fas fa-'+(kind==='car'?'car':'building')+'"></i></div>')+'</div>'+
+        '<div class="lc-img">'+(img?'<img src="'+img+'" loading="lazy">':'<div class="no-img"><i class="fas fa-'+(kind==='car'?'car':kind==='business'?'store':'building')+'"></i></div>')+'</div>'+
         '<div class="lc-body">'+
           '<div class="lc-badges">'+badges+'</div>'+
           '<div class="lc-title">'+esc(item.title||'Sin título')+'</div>'+
