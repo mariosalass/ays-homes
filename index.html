@@ -1312,7 +1312,7 @@ function sendContactForm(e){
 
   var payload = { from_name: name, from_email: email, phone: phone, subject: subject, message: message || '(Sin mensaje)' };
   console.log('[EmailJS] payload contacto:', payload);
-  emailjs.send('service_myh633o', 'template_3g9evab', payload).then(function(){
+  emailjs.send('service_myh633o', 'template_1mf0628', payload).then(function(){
     btn.innerHTML = '<i class=”fas fa-check”></i> ¡Mensaje enviado!';
     setTimeout(function(){
       btn.disabled = false;
@@ -1354,7 +1354,7 @@ document.addEventListener('click',function(e){
 
   var payload2 = { from_name: nameVal, from_email: emailVal, phone: phoneVal, subject: 'Consulta sobre: ' + title, message: messageVal || '(Sin mensaje)' };
   console.log('[EmailJS] payload detalle:', payload2);
-  emailjs.send('service_myh633o', 'template_3g9evab', payload2).then(function(){
+  emailjs.send('service_myh633o', 'template_1mf0628', payload2).then(function(){
     btn.style.background = '#16a34a';
     btn.textContent = '¡Mensaje enviado!';
     setTimeout(function(){
