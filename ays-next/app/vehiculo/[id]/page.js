@@ -14,6 +14,8 @@ export async function generateMetadata({ params }) {
   const { data: item } = await sb.from('listings').select('title,description,photos,brand,year,currency,price').eq('id', params.id).single();
   if (!item) return { title: 'Vehículo · AyS' };
 
+  console.log('[og:image debug] vehiculo', params.id, '| campos:', Object.keys(item), '| photos:', item.photos);
+
   const title = `${item.title} · AyS Soluciones Comerciales`;
   const desc = (item.description || '').slice(0, 155)
     || `${item.brand || 'Auto'} ${item.year || ''} en venta. Precio: ${item.currency || '$'}${fmtPrice(item.price)}`;

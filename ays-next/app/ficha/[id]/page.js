@@ -15,6 +15,8 @@ export async function generateMetadata({ params, searchParams }) {
   const { data: item } = await sb.from('listings').select('title,description,photos,prop_type,operation,location,currency,price,kind,brand,year').eq('id', params.id).single();
   if (!item) return { title: 'Ficha Técnica' };
 
+  console.log('[og:image debug] ficha', params.id, '| campos:', Object.keys(item), '| photos:', item.photos);
+
   const isProperty = item.kind === 'property';
   const siteName = isBroker ? 'Ficha Técnica' : 'AyS Soluciones Comerciales';
   const suffix = isBroker ? '· Ficha Técnica' : '· AyS Soluciones Comerciales';
