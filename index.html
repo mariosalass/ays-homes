@@ -11,6 +11,8 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="cr-locations.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init("GZjKIJ2FxGHEJeCdF");</script>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth;font-size:18px}
@@ -761,10 +763,10 @@ footer ul li a:hover{color:#fff}
     </div>
     <div class="cfb">
       <h3>Envianos un mensaje</h3><p>Completá el formulario y te responderemos pronto</p>
-      <div class="fr"><div class="ff"><label>Nombre completo <span>*</span></label><input type="text" placeholder="Tu nombre"></div><div class="ff"><label>Correo electrónico <span>*</span></label><input type="email" placeholder="tu@email.com"></div></div>
-      <div class="fr"><div class="ff"><label>Teléfono / WhatsApp <span>*</span></label><input type="tel" placeholder="+506 8572-5465"></div><div class="ff"><label>Motivo <span>*</span></label><select><option value="">Seleccioná una opción</option><option>Propiedades</option><option>Autos</option><option>Créditos</option><option>Gestión</option><option>Otro</option></select></div></div>
-      <div class="ff" style="margin-bottom:1.5rem"><label>Mensaje</label><textarea placeholder="Contanos en qué podemos ayudarte..."></textarea></div>
-      <button class="btn-send"><i class="fas fa-paper-plane"></i> Enviar mensaje</button>
+      <div class="fr"><div class="ff"><label>Nombre completo <span>*</span></label><input id="contact-name" type="text" placeholder="Tu nombre"></div><div class="ff"><label>Correo electrónico <span>*</span></label><input id="contact-email" type="email" placeholder="tu@email.com"></div></div>
+      <div class="fr"><div class="ff"><label>Teléfono / WhatsApp <span>*</span></label><input id="contact-phone" type="tel" placeholder="+506 8572-5465"></div><div class="ff"><label>Motivo <span>*</span></label><select id="contact-subject"><option value="">Seleccioná una opción</option><option>Propiedades</option><option>Autos</option><option>Créditos</option><option>Gestión</option><option>Otro</option></select></div></div>
+      <div class="ff" style="margin-bottom:1.5rem"><label>Mensaje</label><textarea id="contact-message" placeholder="Contanos en qué podemos ayudarte..."></textarea></div>
+      <button id="contact-submit" class="btn-send"><i class="fas fa-paper-plane"></i> Enviar mensaje</button>
     </div>
   </div>
   <div class="wa-sec"><div class="wa-ico"><i class="fab fa-whatsapp"></i></div><h3>¿Preferís hablar directamente?</h3><p>Escribinos por WhatsApp y te atendemos de inmediato</p><button class="btn-wa"><i class="fab fa-whatsapp"></i> Chatear por WhatsApp</button></div>
@@ -1279,45 +1281,47 @@ document.addEventListener('click',function(e){
 });
 
 // ── INIT ──
-// â”€â”€ CONTACTO POR CORREO (mailto) â”€â”€
-function sendContactEmail(){
-  var form = document.querySelector('#page-contact .cfb');
-  if(!form) return;
-  var nameEl = form.querySelector('input[type="text"]');
-  var emailEl = form.querySelector('input[type="email"]');
-  var phoneEl = form.querySelector('input[type="tel"]');
-  var subjectEl = form.querySelector('select');
-  var messageEl = form.querySelector('textarea');
+// ── CONTACTO POR EMAILJS ──
+function sendContactForm(e){
+  if(e) e.preventDefault();
+  var name    = (document.getElementById('contact-name').value    || '').trim();
+  var email   = (document.getElementById('contact-email').value   || '').trim();
+  var phone   = (document.getElementById('contact-phone').value   || '').trim();
+  var subject = (document.getElementById('contact-subject').value || '').trim();
+  var message = (document.getElementById('contact-message').value || '').trim();
 
-  var name = (nameEl && nameEl.value || '').trim();
-  var email = (emailEl && emailEl.value || '').trim();
-  var phone = (phoneEl && phoneEl.value || '').trim();
-  var subjectType = (subjectEl && subjectEl.value || '').trim();
-  var message = (messageEl && messageEl.value || '').trim();
-
-  if(!name || !email || !phone || !subjectType){
+  if(!name || !email || !phone || !subject){
     alert('Por favor completá nombre, correo, teléfono y motivo.');
     return;
   }
 
-  var to = 'info@ays.homes';
-  var subject = 'Nuevo contacto web - ' + subjectType;
-  var body =
-    'Nombre: ' + name + '\n' +
-    'Correo: ' + email + '\n' +
-    'Teléfono/WhatsApp: ' + phone + '\n' +
-    'Motivo: ' + subjectType + '\n\n' +
-    'Mensaje:\n' + (message || '(Sin mensaje)');
+  var btn = document.getElementById('contact-submit');
+  btn.disabled = true;
+  btn.innerHTML = 'Enviando...';
 
-  window.location.href = 'mailto:' + to +
-    '?subject=' + encodeURIComponent(subject) +
-    '&body=' + encodeURIComponent(body);
+  emailjs.send('service_myh633o', 'template_3g9evab', {
+    from_name:  name,
+    from_email: email,
+    phone:      phone,
+    subject:    subject,
+    message:    message || '(Sin mensaje)'
+  }).then(function(){
+    btn.innerHTML = '<i class=”fas fa-check”></i> ¡Mensaje enviado!';
+    setTimeout(function(){
+      btn.disabled = false;
+      btn.innerHTML = '<i class=”fas fa-paper-plane”></i> Enviar mensaje';
+    }, 3000);
+  }, function(){
+    alert('Hubo un error al enviar. Intentá de nuevo.');
+    btn.disabled = false;
+    btn.innerHTML = '<i class=”fas fa-paper-plane”></i> Enviar mensaje';
+  });
 }
 document.addEventListener('click',function(e){
   var sendBtn = e.target.closest('#page-contact .cfb .btn-send');
   if(!sendBtn) return;
   e.preventDefault();
-  sendContactEmail();
+  sendContactForm(e);
 });
 
 // â”€â”€ FOOTER GLOBAL EN TODAS LAS PÃGINAS â”€â”€
