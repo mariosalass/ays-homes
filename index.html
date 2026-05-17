@@ -1310,19 +1310,16 @@ function sendContactForm(e){
   btn.disabled = true;
   btn.innerHTML = 'Enviando...';
 
-  emailjs.send('service_myh633o', 'template_3g9evab', {
-    from_name:  name,
-    from_email: email,
-    phone:      phone,
-    subject:    subject,
-    message:    message || '(Sin mensaje)'
-  }).then(function(){
+  var payload = { from_name: name, from_email: email, phone: phone, subject: subject, message: message || '(Sin mensaje)' };
+  console.log('[EmailJS] payload contacto:', payload);
+  emailjs.send('service_myh633o', 'template_3g9evab', payload).then(function(){
     btn.innerHTML = '<i class=”fas fa-check”></i> ¡Mensaje enviado!';
     setTimeout(function(){
       btn.disabled = false;
       btn.innerHTML = '<i class=”fas fa-paper-plane”></i> Enviar mensaje';
     }, 3000);
-  }, function(){
+  }, function(err){
+    console.error('[EmailJS] error contacto:', err);
     alert('Hubo un error al enviar. Intentá de nuevo.');
     btn.disabled = false;
     btn.innerHTML = '<i class=”fas fa-paper-plane”></i> Enviar mensaje';
@@ -1355,13 +1352,9 @@ document.addEventListener('click',function(e){
   btn.disabled = true;
   btn.textContent = 'Enviando...';
 
-  emailjs.send('service_myh633o', 'template_3g9evab', {
-    from_name:  nameVal,
-    from_email: emailVal,
-    phone:      phoneVal,
-    subject:    'Consulta sobre: ' + title,
-    message:    messageVal || '(Sin mensaje)'
-  }).then(function(){
+  var payload2 = { from_name: nameVal, from_email: emailVal, phone: phoneVal, subject: 'Consulta sobre: ' + title, message: messageVal || '(Sin mensaje)' };
+  console.log('[EmailJS] payload detalle:', payload2);
+  emailjs.send('service_myh633o', 'template_3g9evab', payload2).then(function(){
     btn.style.background = '#16a34a';
     btn.textContent = '¡Mensaje enviado!';
     setTimeout(function(){
@@ -1369,7 +1362,8 @@ document.addEventListener('click',function(e){
       btn.style.background = '';
       btn.textContent = 'Solicitar información';
     }, 3000);
-  }, function(){
+  }, function(err){
+    console.error('[EmailJS] error detalle:', err);
     btn.style.background = '#dc2626';
     btn.textContent = 'Error al enviar';
     setTimeout(function(){
