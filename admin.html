@@ -1031,7 +1031,7 @@ function onProvinciaChange(){
   distrSel.innerHTML = '<option value="">Primero elegí cantón</option>';
   distrSel.disabled = true;
   document.getElementById('map-container').style.display = 'none';
-  if(!prov){ cantonSel.disabled = true; updateLocDisplay(); return; }
+  if(!prov || typeof CR_LOCATIONS === 'undefined' || !CR_LOCATIONS[prov] || !CR_LOCATIONS[prov].cantones){ cantonSel.disabled = true; updateLocDisplay(); return; }
   cantonSel.disabled = false;
   Object.keys(CR_LOCATIONS[prov].cantones).sort().forEach(function(c){
     var opt = document.createElement('option');
@@ -1048,6 +1048,7 @@ function onCantonChange(){
   var distrSel = document.getElementById('f-distrito');
   distrSel.innerHTML = '<option value="">Seleccioná distrito...</option>';
   if(!canton){ distrSel.disabled = true; updateLocDisplay(); return; }
+  if(typeof CR_LOCATIONS === 'undefined' || !CR_LOCATIONS[prov] || !CR_LOCATIONS[prov].cantones || !CR_LOCATIONS[prov].cantones[canton]){ distrSel.disabled = true; updateLocDisplay(); return; }
   distrSel.disabled = false;
   var data = CR_LOCATIONS[prov].cantones[canton];
   data.distritos.forEach(function(d){
@@ -1070,6 +1071,11 @@ function updateLocDisplay(){
 }
 
 function showMap(lat, lng, zoom){
+  if(typeof L === 'undefined'){
+    console.warn('Leaflet no esta disponible; se omite el mapa del admin.');
+    return;
+  }
+  try{
   document.getElementById('map-container').style.display = 'block';
   var pinIcon = L.divIcon({
     html: '<div style="width:32px;height:32px;background:#1b5e6e;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 3px 12px rgba(27,94,110,.45)"></div>',
@@ -1086,6 +1092,9 @@ function showMap(lat, lng, zoom){
     adminMap.flyTo([lat, lng], zoom, { duration: 1.2, easeLinearity: 0.25 });
   }
   setTimeout(function(){ adminMap.invalidateSize(); }, 100);
+  }catch(e){
+    console.warn('No se pudo mostrar el mapa del admin.', e);
+  }
 }
 
 // ── PHOTO HANDLING ──
