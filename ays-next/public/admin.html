@@ -903,12 +903,13 @@ function renderList(elId, items, kind){
       badges += '<span class="lc-badge lb-'+(item.operation||'venta').toLowerCase()+'">'+(item.operation||'Venta')+'</span>';
     } else if(kind==='business'){
       badges += '<span class="lc-badge lb-auto">'+(item.operation||'Negocio')+'</span>';
+      if(item.sector) badges += '<span class="lc-badge lb-destacado">'+item.sector+'</span>';
     } else {
       badges += '<span class="lc-badge lb-auto">'+(item.year||'Auto')+'</span>';
     }
     if(item.featured) badges += '<span class="lc-badge lb-destacado">Destacado</span>';
 
-    var loc = kind==='property' ? (item.location||'') : kind==='business' ? ((item.sector||'')+(item.business_type?' · '+item.business_type:'')) : ((item.brand||'')+(item.year?' · '+item.year:''));
+    var loc = kind==='property' ? (item.location||'') : kind==='business' ? (item.location || [item.canton, item.provincia].filter(Boolean).join(', ')) : ((item.brand||'')+(item.year?' · '+item.year:''));
 
     return '<div class="listing-card">'+
       '<div class="lc-inner">'+

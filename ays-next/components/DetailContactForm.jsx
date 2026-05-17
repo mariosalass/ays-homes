@@ -17,7 +17,8 @@ export default function DetailContactForm({ item }) {
   const [loading, setLoading] = useState(false);
 
   const isProperty = item.kind === 'property';
-  const label = isProperty ? 'Agendar una visita' : 'Agendar prueba de manejo';
+  const isBusiness = item.kind === 'business';
+  const label = isProperty ? 'Agendar una visita' : isBusiness ? 'Consultar sobre este negocio' : 'Agendar prueba de manejo';
 
   async function handleSubmit() {
     if (!name || !email || !phone) {
@@ -51,7 +52,7 @@ export default function DetailContactForm({ item }) {
 
   function openWA() {
     const n = WA_NUMBERS[Math.floor(Math.random() * WA_NUMBERS.length)];
-    const noun = isProperty ? 'propiedad' : 'vehículo';
+    const noun = isProperty ? 'propiedad' : isBusiness ? 'negocio' : 'vehículo';
     const msg = `Me interesa más información sobre este ${noun}: ${window.location.href}`;
     const url = `https://wa.me/${n}?text=${encodeURIComponent(msg)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
