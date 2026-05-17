@@ -257,8 +257,32 @@ function renderFicha(item, mode){
     }, 200);
   }
 
-  // Actualizar título de página
-  document.title = (item.title||'Publicación') + ' · AyS';
+  // Meta tags dinámicos para SEO y preview en WhatsApp/redes
+  document.title = (item.title||'Propiedad') + ' · AyS Soluciones Comerciales';
+
+  function setMeta(name, content, prop){
+    var el = document.querySelector((prop?'[property="':'[name="')+name+'"]') || document.createElement('meta');
+    if(prop) el.setAttribute('property', name);
+    else el.setAttribute('name', name);
+    el.setAttribute('content', content);
+    if(!el.parentNode) document.head.appendChild(el);
+  }
+
+  var desc = (item.description||'').slice(0,155)
+    || ((item.prop_type||'Propiedad')+' en '+(item.operation||'venta')+' en '+(item.location||'Costa Rica')+'. Precio: '+(item.currency||'$')+fmtPrice(item.price));
+  var img = (item.photos && item.photos[0]) || '';
+  var url = window.location.href;
+
+  setMeta('description', desc);
+  setMeta('og:title', document.title, true);
+  setMeta('og:description', desc, true);
+  setMeta('og:image', img, true);
+  setMeta('og:url', url, true);
+  setMeta('og:type', 'website', true);
+  setMeta('twitter:card', 'summary_large_image');
+  setMeta('twitter:title', document.title);
+  setMeta('twitter:description', desc);
+  setMeta('twitter:image', img);
 
   // Guardar fotos para el lightbox
   galleryPhotos = photos;
