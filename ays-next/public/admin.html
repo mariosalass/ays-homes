@@ -1068,7 +1068,7 @@ function populateForm(item, type){
     document.getElementById('f-biz-sector').value   = item.sector||'Comercio';
     document.getElementById('f-biz-op').value       = item.operation||'Venta';
     document.getElementById('f-biz-type').value     = item.business_type||'';
-    document.getElementById('f-biz-income').value   = item.income||'';
+    document.getElementById('f-biz-income').value   = item.income_approx||'';
     document.getElementById('f-biz-reason').value   = item.sale_reason||'';
     document.getElementById('f-biz-includes').value = item.includes||'';
     initBizLocationSelects();
@@ -1345,7 +1345,7 @@ async function saveItem(){
       row.sector        = document.getElementById('f-biz-sector').value;
       row.operation     = document.getElementById('f-biz-op').value;
       row.business_type = document.getElementById('f-biz-type').value.trim();
-      row.income        = document.getElementById('f-biz-income').value.trim();
+      row.income_approx = document.getElementById('f-biz-income').value.trim();
       row.sale_reason   = document.getElementById('f-biz-reason').value.trim();
       row.includes      = document.getElementById('f-biz-includes').value.trim();
       var bp = document.getElementById('f-biz-provincia').value;

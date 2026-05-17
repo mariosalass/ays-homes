@@ -75,14 +75,14 @@ export default async function NegocioPage({ params }) {
             {item.location && <p className="det-loc"><i className="fas fa-location-dot" /> {item.location}</p>}
             <p className="det-price">{item.currency || '$'}{fmtPrice(item.price)}</p>
 
-            {(item.income || item.sale_reason || item.includes) && (
+            {(item.income_approx || item.sale_reason || item.includes) && (
               <div className="ibox">
                 <h3>Información del negocio</h3>
                 <div className="specs-row" style={{ gridTemplateColumns: 'repeat(2,1fr)' }}>
-                  {item.income && (
+                  {item.income_approx && (
                     <div className="spec-i">
                       <i className="fas fa-chart-line" />
-                      <span className="sv" style={{ fontSize:14 }}>{item.income}</span>
+                      <span className="sv" style={{ fontSize:14 }}>{item.income_approx}</span>
                       <span className="sl">Ingresos aprox.</span>
                     </div>
                   )}
