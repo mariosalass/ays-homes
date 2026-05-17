@@ -836,16 +836,14 @@ function renderList(elId, items, kind){
         '<button class="lc-btn feat" onclick="toggleFeatured(\''+item.id+'\','+!!item.featured+',\''+kind+'\')"><i class="fas fa-star"></i> '+(item.featured?'Quitar destacado':'Destacar')+'</button>'+
         '<button class="lc-btn edit" onclick="editItem(\''+item.id+'\',\''+kind+'\')"><i class="fas fa-pen"></i> Editar</button>'+
         '<button class="lc-btn del" onclick="confirmDelete(\''+item.id+'\',\''+kind+'\')"><i class="fas fa-trash-can"></i> Eliminar</button>'+
-        (kind==='property'
-          ? '<div class="lc-share-wrap" id="sw-'+item.id+'">'
-              +'<button class="lc-btn share" onclick="toggleShareMenu(\''+item.id+'\')" title="Compartir">'
-              +'<i class="fas fa-share-nodes"></i></button>'
-              +'<div class="share-menu" id="sm-'+item.id+'">'
-                +'<button onclick="copyLink(\''+item.id+'\',\'client\')"><i class="fas fa-user"></i> Link de cliente</button>'
-                +'<button onclick="copyLink(\''+item.id+'\',\'broker\')"><i class="fas fa-handshake"></i> Link de corredor</button>'
-              +'</div>'
-            +'</div>'
-          : '')+
+        '<div class="lc-share-wrap" id="sw-'+item.id+'">'
+          +'<button class="lc-btn share" onclick="toggleShareMenu(\''+item.id+'\')" title="Compartir">'
+          +'<i class="fas fa-share-nodes"></i></button>'
+          +'<div class="share-menu" id="sm-'+item.id+'">'
+            +'<button onclick="copyLink(\''+item.id+'\',\'client\')"><i class="fas fa-user"></i> Link de cliente</button>'
+            +'<button onclick="copyLink(\''+item.id+'\',\'broker\')"><i class="fas fa-handshake"></i> Link de corredor</button>'
+          +'</div>'
+        +'</div>'+
       '</div>'+
     '</div>';
   }).join('');
@@ -863,8 +861,9 @@ function toggleShareMenu(id){
 }
 
 function copyLink(id, mode){
-  var base = window.location.origin + window.location.pathname.replace('admin.html','');
-  var url = base + 'ficha.html?id='+id+'&mode='+mode;
+  var url = mode === 'client'
+    ? 'https://ays.homes/ficha.html?id='+id+'&mode=client'
+    : 'https://cr-prop-fichas.fyi/ficha.html?id='+id+'&mode=broker';
   navigator.clipboard.writeText(url).then(function(){
     document.querySelectorAll('.share-menu').forEach(function(m){ m.classList.remove('open'); });
     showToast(mode==='client' ? 'Link de cliente copiado ✓' : 'Link de corredor copiado ✓', 'ok');

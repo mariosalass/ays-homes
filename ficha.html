@@ -258,7 +258,9 @@ function renderFicha(item, mode){
   }
 
   // Meta tags dinámicos para SEO y preview en WhatsApp/redes
-  document.title = (item.title||'Propiedad') + ' · AyS Soluciones Comerciales';
+  document.title = isBroker
+    ? (item.title||'Propiedad') + ' · Ficha Técnica'
+    : (item.title||'Propiedad') + ' · AyS Soluciones Comerciales';
 
   function setMeta(name, content, prop){
     var el = document.querySelector((prop?'[property="':'[name="')+name+'"]') || document.createElement('meta');
