@@ -1077,7 +1077,7 @@ function detailContactForm(kind){
     '<input class="fi" type="tel" placeholder="Teléfono / WhatsApp">'+
     '<textarea class="fi fita" placeholder="Mensaje (opcional)"></textarea>'+
     '<button class="btn-fm">Solicitar información</button>'+
-    '<button class="btn-fwa"><i class="fab fa-whatsapp"></i> Hablar por WhatsApp</button>'+
+    '<button class="btn-fwa" data-kind="'+kind+'"><i class="fab fa-whatsapp"></i> Hablar por WhatsApp</button>'+
   '</div>';
 }
 
@@ -1277,7 +1277,18 @@ function redirectToRandomWhatsapp(e){
 document.addEventListener('click',function(e){
   var waTrigger = e.target.closest('.btn-wapp,.btn-fwa,.btn-wa,.wa-contact-link');
   if(!waTrigger) return;
-  redirectToRandomWhatsapp(e);
+  e.preventDefault();
+  var kind = waTrigger.dataset ? waTrigger.dataset.kind : null;
+  if(kind){
+    var noun = kind === 'car' ? 'vehículo' : 'propiedad';
+    var msg = 'Me interesa más información sobre este ' + noun + ': ' + window.location.href;
+    var n = WA_NUMBERS[Math.floor(Math.random()*WA_NUMBERS.length)];
+    var url = 'https://wa.me/' + n + '?text=' + encodeURIComponent(msg);
+    var w = window.open(url,'_blank','noopener,noreferrer');
+    if(!w) window.location.href = url;
+  } else {
+    redirectToRandomWhatsapp(e);
+  }
 });
 
 // ── INIT ──
@@ -1322,6 +1333,51 @@ document.addEventListener('click',function(e){
   if(!sendBtn) return;
   e.preventDefault();
   sendContactForm(e);
+});
+
+// ── FORMULARIO DE DETALLE (EmailJS) ──
+document.addEventListener('click',function(e){
+  var btn = e.target.closest('.fcard .btn-fm');
+  if(!btn) return;
+  e.preventDefault();
+  var card = btn.closest('.fcard');
+  var nameVal    = (card.querySelector('input[type="text"]').value  || '').trim();
+  var emailVal   = (card.querySelector('input[type="email"]').value || '').trim();
+  var phoneVal   = (card.querySelector('input[type="tel"]').value   || '').trim();
+  var messageVal = (card.querySelector('textarea').value            || '').trim();
+
+  if(!nameVal || !emailVal || !phoneVal){
+    alert('Por favor completá nombre, correo y teléfono.');
+    return;
+  }
+
+  var title = activeItem ? activeItem.title : 'propiedad';
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  emailjs.send('service_myh633o', 'template_3g9evab', {
+    from_name:  nameVal,
+    from_email: emailVal,
+    phone:      phoneVal,
+    subject:    'Consulta sobre: ' + title,
+    message:    messageVal || '(Sin mensaje)'
+  }).then(function(){
+    btn.style.background = '#16a34a';
+    btn.textContent = '¡Mensaje enviado!';
+    setTimeout(function(){
+      btn.disabled = false;
+      btn.style.background = '';
+      btn.textContent = 'Solicitar información';
+    }, 3000);
+  }, function(){
+    btn.style.background = '#dc2626';
+    btn.textContent = 'Error al enviar';
+    setTimeout(function(){
+      btn.disabled = false;
+      btn.style.background = '';
+      btn.textContent = 'Solicitar información';
+    }, 3000);
+  });
 });
 
 // â”€â”€ FOOTER GLOBAL EN TODAS LAS PÃGINAS â”€â”€
