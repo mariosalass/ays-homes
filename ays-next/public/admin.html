@@ -910,7 +910,7 @@ function renderList(elId, items, kind){
     }
     if(item.featured) badges += '<span class="lc-badge lb-destacado">Destacado</span>';
 
-    var loc = kind==='property' ? (item.location||'') : kind==='business' ? (item.canton && item.provincia ? item.canton+', '+item.provincia : (item.canton||item.provincia||'')) : ((item.brand||'')+(item.year?' · '+item.year:''));
+    var loc = kind==='property' ? (item.location||'') : kind==='business' ? (item.canton && item.provincia ? item.canton+', '+item.provincia : '') : ((item.brand||'')+(item.year?' · '+item.year:''));
 
     return '<div class="listing-card">'+
       '<div class="lc-inner">'+
