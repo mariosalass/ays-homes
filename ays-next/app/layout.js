@@ -6,6 +6,11 @@ const inter = Inter({ subsets: ['latin'], weight: ['300','400','500','600','700'
 export const metadata = {
   title: 'AyS Soluciones Comerciales',
   description: 'Propiedades, autos y créditos en Costa Rica. Adrián Salas y Susy Bazo, agentes inmobiliarios.',
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
   openGraph: {
     title: 'AyS Soluciones Comerciales',
     description: 'Propiedades, autos y créditos en Costa Rica.',
