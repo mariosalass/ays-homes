@@ -1712,11 +1712,13 @@ function updatePriceFieldMode(type){
     lbl.innerHTML = 'Precio principal (referencia) <span>*</span>';
     inp.placeholder = 'Se calcula según operación';
     inp.readOnly = true;
+    showEl('price-field', true);
     if(hint) hint.style.display = 'block';
   } else {
     lbl.innerHTML = 'Precio <span>*</span>';
     inp.placeholder = 'Ej: 250000';
     inp.readOnly = false;
+    showEl('price-field', true);
     if(hint) hint.style.display = 'none';
   }
 }
@@ -1730,6 +1732,7 @@ function updatePropertyFinanceFields(){
   var showDebt = op === 'Venta cediendo deuda';
   var showDown = op === 'Venta cediendo deuda' || op === 'Alquiler con opción de compra';
   var showOption = op === 'Alquiler con opción de compra';
+  showEl('price-field', op !== 'Venta y Alquiler');
   document.getElementById('label-sale-price').textContent = op === 'Venta cediendo deuda' ? 'Valor total de la propiedad' : 'Precio de venta';
   document.getElementById('label-down-payment').textContent = op === 'Alquiler con opción de compra' ? 'Prima/opción inicial' : 'Prima requerida';
   showEl('field-sale-price', showSale);
