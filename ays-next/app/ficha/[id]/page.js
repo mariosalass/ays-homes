@@ -8,11 +8,23 @@ function fmtPrice(p) {
   return isNaN(n) ? p || '' : n.toLocaleString('es-CR');
 }
 
+function hasValue(v) {
+  return v !== null && v !== undefined && String(v).trim() !== '';
+}
+
+function operationType(item) {
+  return String(item.operation_type || item.operation || 'Venta').trim();
+}
+
+function isSaleAndRent(item) {
+  return String(item.operation_type || '').trim() === 'Venta y Alquiler';
+}
+
 export async function generateMetadata({ params, searchParams }) {
   const mode = searchParams?.mode || 'client';
   const isBroker = mode === 'broker';
   const sb = createSupabaseClient();
-  const { data: item } = await sb.from('listings').select('title,description,photos,prop_type,operation,location,currency,price,kind,brand,year').eq('id', params.id).single();
+  const { data: item } = await sb.from('listings').select('title,description,photos,prop_type,operation,operation_type,location,currency,price,sale_price,rent_price,kind,brand,year').eq('id', params.id).single();
   if (!item) return { title: 'Ficha Técnica' };
 
   console.log('[og:image debug] ficha', params.id, '| campos:', Object.keys(item), '| photos:', item.photos);
@@ -21,9 +33,10 @@ export async function generateMetadata({ params, searchParams }) {
   const siteName = isBroker ? 'Ficha Técnica' : 'AyS Soluciones Comerciales';
   const suffix = isBroker ? '· Ficha Técnica' : '· AyS Soluciones Comerciales';
   const title = `${item.title} ${suffix}`;
+  const op = operationType(item);
   const desc = (item.description || '').slice(0, 155)
     || (isProperty
-      ? `${item.prop_type || 'Propiedad'} en ${item.operation || 'venta'} en ${item.location || 'Costa Rica'}. Precio: ${item.currency || '$'}${fmtPrice(item.price)}`
+      ? `${item.prop_type || 'Propiedad'} en ${op || 'venta'} en ${item.location || 'Costa Rica'}. Precio: ${item.currency || '$'}${fmtPrice(item.price)}`
       : `${item.brand || 'Auto'} ${item.year || ''} en venta. Precio: ${item.currency || '$'}${fmtPrice(item.price)}`);
   const img = item.photos?.[0] || '';
 
@@ -45,6 +58,10 @@ export default async function FichaPage({ params, searchParams }) {
 
   const photos = item.photos || [];
   const isProperty = item.kind === 'property';
+  const operation = operationType(item);
+  const isSaleRent = isProperty && isSaleAndRent(item);
+  const salePrice = hasValue(item.sale_price) ? item.sale_price : item.price;
+  const rentPrice = item.rent_price;
   const WA_NUMBER = '50685725465';
   const waMsg = encodeURIComponent(`Hola, me interesa esta publicación: ${item.title}`);
 
@@ -74,7 +91,7 @@ export default async function FichaPage({ params, searchParams }) {
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '1.5rem 1.2rem 3rem' }}>
         <p style={{ fontSize: 12, color: '#c08b2f', fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>
           {isProperty ? (item.prop_type || 'Propiedad') : `${item.brand || 'Auto'}${item.year ? ' · ' + item.year : ''}`}
-          {isProperty && item.operation ? ' · ' + item.operation : ''}
+          {isProperty && operation ? ' · ' + operation : ''}
         </p>
         <h1 style={{ fontSize: 'clamp(1.5rem,5vw,2rem)', fontWeight: 800, marginBottom: 8, letterSpacing: '-.02em' }}>{item.title}</h1>
 
@@ -84,10 +101,17 @@ export default async function FichaPage({ params, searchParams }) {
           </p>
         )}
 
-        <p style={{ fontSize: 'clamp(1.5rem,5vw,2rem)', fontWeight: 800, color: '#1b5e6e', marginBottom: 20 }}>
-          {item.currency || '$'}{fmtPrice(item.price)}
-          {isProperty && item.operation === 'Alquiler' && <span style={{ fontSize: 15, fontWeight: 400, color: '#64748b' }}>/mes</span>}
-        </p>
+        {isSaleRent ? (
+          <div style={{ fontSize: 'clamp(1.5rem,5vw,2rem)', fontWeight: 800, color: '#1b5e6e', marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {hasValue(salePrice) && <div>Venta: {item.currency || '$'}{fmtPrice(salePrice)}</div>}
+            {hasValue(rentPrice) && <div>Alquiler: {item.currency || '$'}{fmtPrice(rentPrice)} <span style={{ fontSize: 15, fontWeight: 400, color: '#64748b' }}>/mes</span></div>}
+          </div>
+        ) : (
+          <p style={{ fontSize: 'clamp(1.5rem,5vw,2rem)', fontWeight: 800, color: '#1b5e6e', marginBottom: 20 }}>
+            {item.currency || '$'}{fmtPrice(item.price)}
+            {isProperty && operation.indexOf('Alquiler') === 0 && <span style={{ fontSize: 15, fontWeight: 400, color: '#64748b' }}>/mes</span>}
+          </p>
+        )}
 
         {/* Specs */}
         {isProperty

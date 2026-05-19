@@ -7,19 +7,36 @@ function fmtPrice(p) {
   return n.toLocaleString('es-CR');
 }
 
+function hasValue(v) {
+  return v !== null && v !== undefined && String(v).trim() !== '';
+}
+
+function operationType(item) {
+  return String(item.operation_type || item.operation || 'Venta').trim();
+}
+
+function isSaleAndRent(item) {
+  return String(item.operation_type || '').trim() === 'Venta y Alquiler';
+}
+
 export default function PropCard({ item }) {
+  console.log('[PropCard]', item.title, '| operation_type:', item.operation_type, '| sale_price:', item.sale_price, '| rent_price:', item.rent_price);
   const router = useRouter();
   const href = `/propiedad/${item.id}`;
   const photos = item.photos || [];
   const img = photos[0] || 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=700&q=80';
-  const opClass = item.operation === 'Alquiler' ? 'b-rent' : 'b-sale';
+  const operation = operationType(item);
+  const isSaleRent = isSaleAndRent(item);
+  const salePrice = hasValue(item.sale_price) ? item.sale_price : item.price;
+  const rentPrice = item.rent_price;
+  const opClass = operation.indexOf('Alquiler') === 0 ? 'b-rent' : 'b-sale';
 
   return (
     <div className="pcard" onClick={() => router.push(href)} style={{ cursor: 'pointer' }}>
       <div className="pimg">
         <img src={img} width="700" height="460" loading="lazy" decoding="async" alt={item.title || ''} />
         <div className="pbadges">
-          <span className={`badge ${opClass}`}>{item.operation || 'Venta'}</span>
+          <span className={`badge ${opClass}`}>{isSaleRent ? 'Venta/Alquiler' : operation}</span>
           {item.featured && <span className="badge b-feat">Destacado</span>}
         </div>
         {photos.length > 1 && (
@@ -36,10 +53,18 @@ export default function PropCard({ item }) {
             <i className="fas fa-location-dot" /> {item.location}
           </p>
         )}
-        <p className="pprice">
-          {item.currency || '$'}{fmtPrice(item.price)}
-          {item.operation === 'Alquiler' && <span>/mes</span>}
-        </p>
+        {isSaleRent ? (
+          <p className="pprice">
+            {hasValue(salePrice) && <>{item.currency || '$'}{fmtPrice(salePrice)}</>}
+            {hasValue(salePrice) && hasValue(rentPrice) && <span> · </span>}
+            {hasValue(rentPrice) && <span>{item.currency || '$'}{fmtPrice(rentPrice)}/mes</span>}
+          </p>
+        ) : (
+          <p className="pprice">
+            {item.currency || '$'}{fmtPrice(item.price)}
+            {operation.indexOf('Alquiler') === 0 && <span>/mes</span>}
+          </p>
+        )}
         {(item.beds || item.baths || item.area || item.parking) && (
           <div className="pspecs">
             {item.beds    && <span className="pspec"><i className="fas fa-bed" />    {item.beds}</span>}

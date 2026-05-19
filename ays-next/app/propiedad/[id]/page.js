@@ -10,19 +10,32 @@ function fmtPrice(p) {
   return isNaN(n) ? p || '' : n.toLocaleString('es-CR');
 }
 
+function hasValue(v) {
+  return v !== null && v !== undefined && String(v).trim() !== '';
+}
+
+function operationType(item) {
+  return String(item.operation_type || item.operation || 'Venta').trim();
+}
+
+function isSaleAndRent(item) {
+  return String(item.operation_type || '').trim() === 'Venta y Alquiler';
+}
+
 function currency(c) { return c === '₡' ? 'CRC' : 'USD'; }
 
 export async function generateMetadata({ params }) {
   const sb = createSupabaseClient();
-  const { data: item } = await sb.from('listings').select('title,description,photos,prop_type,operation,location,currency,price,provincia,canton,distrito,beds,baths,area').eq('id', params.id).single();
+  const { data: item } = await sb.from('listings').select('title,description,photos,prop_type,operation,operation_type,location,currency,price,sale_price,rent_price,provincia,canton,distrito,beds,baths,area').eq('id', params.id).single();
   if (!item) return { title: 'Propiedad · AyS' };
 
   const loc = [item.distrito, item.canton, item.provincia].filter(Boolean).join(', ') || item.location || 'Costa Rica';
-  const title = `${item.prop_type || 'Propiedad'} en ${item.operation || 'venta'} en ${loc} — ${item.currency || '$'}${fmtPrice(item.price)} | AyS`;
+  const op = operationType(item);
+  const title = `${item.prop_type || 'Propiedad'} en ${op || 'venta'} en ${loc} — ${item.currency || '$'}${fmtPrice(item.price)} | AyS`;
   const seoText = await generateSEOText(item);
   const desc = seoText.slice(0, 155)
     || (item.description || '').slice(0, 155)
-    || `${item.prop_type || 'Propiedad'} en ${item.operation || 'venta'} en ${loc}. Precio: ${item.currency || '$'}${fmtPrice(item.price)}`;
+    || `${item.prop_type || 'Propiedad'} en ${op || 'venta'} en ${loc}. Precio: ${item.currency || '$'}${fmtPrice(item.price)}`;
   const img = item.photos?.[0] || '';
 
   return {
@@ -42,7 +55,11 @@ export default async function PropiedadPage({ params }) {
   console.log('[propiedad] seoText generado:', seoText);
 
   const photos = item.photos || [];
-  const opClass = item.operation === 'Alquiler' ? 'b-rent' : 'b-sale';
+  const operation = operationType(item);
+  const isSaleRent = isSaleAndRent(item);
+  const salePrice = hasValue(item.sale_price) ? item.sale_price : item.price;
+  const rentPrice = item.rent_price;
+  const opClass = operation.indexOf('Alquiler') === 0 ? 'b-rent' : 'b-sale';
 
   const schema = {
     '@context': 'https://schema.org',
@@ -62,7 +79,7 @@ export default async function PropiedadPage({ params }) {
         <Lightbox photos={photos} />
         {photos.length > 0 && (
           <div className="det-badge">
-            <span className={`badge ${opClass}`}>{item.operation || 'Venta'}</span>
+            <span className={`badge ${opClass}`}>{isSaleRent ? 'Venta/Alquiler' : operation}</span>
           </div>
         )}
         <div className="det-layout">
@@ -70,10 +87,17 @@ export default async function PropiedadPage({ params }) {
             <p className="det-type">{item.prop_type || 'Propiedad'}</p>
             <h1 className="det-title">{item.title}</h1>
             {item.location && <p className="det-loc"><i className="fas fa-location-dot" /> {item.location}</p>}
-            <p className="det-price">
-              {item.currency || '$'}{fmtPrice(item.price)}
-              {item.operation === 'Alquiler' && <span>/mes</span>}
-            </p>
+            {isSaleRent ? (
+              <div className="det-price" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {hasValue(salePrice) && <div>Venta: {item.currency || '$'}{fmtPrice(salePrice)}</div>}
+                {hasValue(rentPrice) && <div>Alquiler: {item.currency || '$'}{fmtPrice(rentPrice)} <span>/mes</span></div>}
+              </div>
+            ) : (
+              <p className="det-price">
+                {item.currency || '$'}{fmtPrice(item.price)}
+                {operation.indexOf('Alquiler') === 0 && <span>/mes</span>}
+              </p>
+            )}
 
             {(item.beds || item.baths || item.area || item.parking) && (
               <div className="ibox">

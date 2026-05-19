@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s 'https://mlrglzzxrfvbkucrtffd.supabase.co/rest/v1/listings?operation_type=eq.Venta%20y%20Alquiler&limit=1&select=id,title,operation,operation_type,price,sale_price,rent_price,currency,prop_type,location,beds,baths,area,parking' -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1scmdsenp4cmZ2Ymt1Y3J0ZmZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5MDc1MTQsImV4cCI6MjA5MDQ4MzUxNH0.MI3N5PR3IkAYgBT1cHOQhxdQDcwziMWLzt3zjuLWTZM' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1scmdsenp4cmZ2Ymt1Y3J0ZmZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5MDc1MTQsImV4cCI6MjA5MDQ4MzUxNH0.MI3N5PR3IkAYgBT1cHOQhxdQDcwziMWLzt3zjuLWTZM')"
+    ]
+  }
+}
