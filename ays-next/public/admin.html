@@ -537,6 +537,7 @@ img{display:block;max-width:100%}
           <select id="f-operation-type" onchange="updatePropertyFinanceFields()">
             <option value="Venta">Venta</option>
             <option value="Alquiler">Alquiler</option>
+            <option value="Venta y Alquiler">Venta y Alquiler</option>
             <option value="Venta cediendo deuda">Venta cediendo deuda</option>
             <option value="Alquiler con opción de compra">Alquiler con opción de compra</option>
           </select>
@@ -1178,7 +1179,7 @@ function populateForm(item, type){
     var opType = getPropertyOperation(item);
     document.getElementById('f-prop-type').value = item.prop_type||'Casa';
     document.getElementById('f-operation-type').value = opType;
-    setMoneyInputValue('f-sale-price', item.sale_price, (opType==='Venta' || opType==='Venta cediendo deuda') ? item.price : '');
+    setMoneyInputValue('f-sale-price', item.sale_price, (opType==='Venta' || opType==='Venta y Alquiler' || opType==='Venta cediendo deuda') ? item.price : '');
     setMoneyInputValue('f-rent-price', item.rent_price, (opType==='Alquiler' || opType==='Alquiler con opción de compra') ? item.price : '');
     setMoneyInputValue('f-debt-amount', item.debt_amount, '');
     setMoneyInputValue('f-down-payment', item.down_payment, opType==='Venta cediendo deuda' ? item.price : '');
@@ -1469,10 +1470,11 @@ async function saveItem(){
       var debtAmount = moneyValue('f-debt-amount');
       var downPayment = moneyValue('f-down-payment');
       var optionPurchasePrice = moneyValue('f-option-purchase-price');
+      row.available_operations = availableOperationsFor(opType);
       row.operation_type = opType;
       row.operation = legacyOperationFor(opType);
-      row.sale_price = (opType==='Venta' || opType==='Venta cediendo deuda') ? salePrice : null;
-      row.rent_price = (opType==='Alquiler' || opType==='Alquiler con opción de compra') ? rentPrice : null;
+      row.sale_price = (opType==='Venta' || opType==='Venta y Alquiler' || opType==='Venta cediendo deuda') ? salePrice : null;
+      row.rent_price = (opType==='Alquiler' || opType==='Venta y Alquiler' || opType==='Alquiler con opción de compra') ? rentPrice : null;
       row.debt_amount = opType==='Venta cediendo deuda' ? debtAmount : null;
       row.down_payment = (opType==='Venta cediendo deuda' || opType==='Alquiler con opción de compra') ? downPayment : null;
       row.option_purchase_price = opType==='Alquiler con opción de compra' ? optionPurchasePrice : null;
@@ -1622,6 +1624,7 @@ function normalizePropertyOperation(op){
   var v = String(op||'').trim().toLowerCase();
   if(v === 'alquiler con opción de compra' || v === 'alquiler con opcion de compra' || v === 'alquiler con opción') return 'Alquiler con opción de compra';
   if(v === 'venta cediendo deuda' || v === 'cediendo deuda') return 'Venta cediendo deuda';
+  if(v === 'venta y alquiler' || v === 'venta/alquiler' || v === 'venta alquiler') return 'Venta y Alquiler';
   if(v === 'alquiler') return 'Alquiler';
   return 'Venta';
 }
@@ -1634,6 +1637,12 @@ function getPropertyOperation(item){
 }
 function legacyOperationFor(op){
   return normalizePropertyOperation(op).indexOf('Alquiler') === 0 ? 'Alquiler' : 'Venta';
+}
+function availableOperationsFor(op){
+  op = normalizePropertyOperation(op);
+  if(op === 'Venta y Alquiler' || op === 'Alquiler con opción de compra') return ['Venta', 'Alquiler'];
+  if(op === 'Alquiler') return ['Alquiler'];
+  return ['Venta'];
 }
 function moneyValue(id){
   var el = document.getElementById(id);
@@ -1666,6 +1675,7 @@ function propertyPrimaryPrice(op, salePrice, rentPrice, downPayment){
   op = normalizePropertyOperation(op);
   if(op === 'Venta') n = salePrice;
   else if(op === 'Alquiler') n = rentPrice;
+  else if(op === 'Venta y Alquiler') n = salePrice;
   else if(op === 'Venta cediendo deuda') n = downPayment;
   else if(op === 'Alquiler con opción de compra') n = rentPrice;
   return n === null || n === undefined || isNaN(n) ? '' : String(n);
@@ -1698,8 +1708,8 @@ function updatePropertyFinanceFields(){
   showEl('property-finance-fields', isProperty);
   if(!isProperty) return;
   var op = getSelectedPropertyOperation();
-  var showSale = op === 'Venta' || op === 'Venta cediendo deuda';
-  var showRent = op === 'Alquiler' || op === 'Alquiler con opción de compra';
+  var showSale = op === 'Venta' || op === 'Venta y Alquiler' || op === 'Venta cediendo deuda';
+  var showRent = op === 'Alquiler' || op === 'Venta y Alquiler' || op === 'Alquiler con opción de compra';
   var showDebt = op === 'Venta cediendo deuda';
   var showDown = op === 'Venta cediendo deuda' || op === 'Alquiler con opción de compra';
   var showOption = op === 'Alquiler con opción de compra';
