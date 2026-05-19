@@ -1,4 +1,3 @@
-import { notFound } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabase';
 import { generateSEOText } from '@/lib/gemini';
 import PageLayout from '@/components/PageLayout';
@@ -36,7 +35,16 @@ export async function generateMetadata({ params }) {
 export default async function VehiculoPage({ params }) {
   const sb = createSupabaseClient();
   const { data: item } = await sb.from('listings').select('*').eq('id', params.id).single();
-  if (!item) notFound();
+  if (!item) return (
+    <PageLayout>
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1.2rem', textAlign: 'center', padding: '3rem' }}>
+        <i className="fas fa-car-burst" style={{ fontSize: '3rem', color: '#cbd5e1' }} />
+        <h1 style={{ fontSize: '1.6rem', fontWeight: 700 }}>Esta publicación ya no está disponible</h1>
+        <p style={{ color: '#64748b' }}>Es posible que haya sido eliminada o que el enlace sea incorrecto.</p>
+        <a href="/" style={{ background: 'var(--teal)', color: '#fff', padding: '12px 28px', borderRadius: '10px', fontWeight: 600, textDecoration: 'none' }}>Volver al inicio</a>
+      </div>
+    </PageLayout>
+  );
 
   const seoText = await generateSEOText(item);
 
