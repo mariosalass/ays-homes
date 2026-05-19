@@ -220,15 +220,17 @@ footer ul li a:hover{color:#fff}
 
 /* DETAIL */
 .det-page{margin-top:72px}
-.gal-hero{position:relative;height:480px;overflow:hidden;cursor:pointer;background:#111}
-.gal-hero img{width:100%;height:100%;object-fit:cover;transition:transform .4s ease}
-.gal-hero:hover img{transform:scale(1.02)}
-.gal-ctr{position:absolute;bottom:18px;right:18px;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);color:#fff;font-size:14px;font-weight:600;padding:8px 16px;border-radius:10px;display:flex;align-items:center;gap:8px;pointer-events:none}
+.gal-hero{position:relative;height:80vh;min-height:420px;overflow:hidden;cursor:pointer;background:#111}
+.gal-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:45%;background:linear-gradient(transparent,rgba(0,0,0,.55));z-index:3;pointer-events:none}
+.gal-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+@keyframes heroFadeIn{from{opacity:0}to{opacity:1}}
+.gal-hero-img-in{animation:heroFadeIn .6s ease forwards}
+.gal-ctr{position:absolute;bottom:18px;right:18px;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);color:#fff;font-size:14px;font-weight:600;padding:8px 16px;border-radius:10px;display:flex;align-items:center;gap:8px;pointer-events:none}
 .det-badge{position:absolute;top:18px;left:18px}
-.gal-arr{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.45);backdrop-filter:blur(4px);color:#fff;border:none;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;transition:background .2s;z-index:2;flex-shrink:0}
-.gal-arr:hover{background:rgba(0,0,0,.7)}
-.gal-arr-l{left:14px}
-.gal-arr-r{right:14px}
+.gal-arr-fx{position:fixed;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.5);backdrop-filter:blur(6px);color:#fff;border:none;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;transition:background .2s;z-index:10000;flex-shrink:0}
+.gal-arr-fx:hover{background:rgba(0,0,0,.75)}
+.gal-arr-fx-l{left:16px}
+.gal-arr-fx-r{right:16px}
 .det-layout{display:grid;grid-template-columns:1fr 400px;gap:2.5rem;padding:3rem;align-items:start;max-width:var(--wrap);margin:0 auto}
 .det-type{font-size:12px;color:var(--gold);font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
 .det-title{font-size:2.4rem;font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
@@ -411,7 +413,7 @@ footer ul li a:hover{color:#fff}
   .fg-grid{grid-template-columns:repeat(2,1fr)}
   .listings{padding:2rem 1rem 4rem}
   .det-page{margin-top:72px}
-  .gal-hero{height:320px}
+  .gal-hero{height:70vh;min-height:320px}
   .det-title{font-size:1.9rem}
   .det-price{font-size:2rem}
   .specs-row{grid-template-columns:repeat(2,1fr)}
@@ -440,10 +442,10 @@ footer ul li a:hover{color:#fff}
   .pprice{font-size:20px}
   .fg-grid{grid-template-columns:1fr}
   .prop-grid{grid-template-columns:1fr}
-  .gal-hero{height:240px}
-  .gal-arr{width:36px;height:36px;font-size:14px}
-  .gal-arr-l{left:8px}
-  .gal-arr-r{right:8px}
+  .gal-hero{height:60vh;min-height:260px}
+  .gal-arr-fx{width:38px;height:38px;font-size:15px}
+  .gal-arr-fx-l{left:8px}
+  .gal-arr-fx-r{right:8px}
   .lb-arr{width:38px;height:38px;font-size:16px}
   .lb-main{gap:8px;padding:0 4px}
   .det-layout{padding:1rem}
