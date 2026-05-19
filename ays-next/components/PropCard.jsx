@@ -20,13 +20,13 @@ function isSaleAndRent(item) {
 }
 
 export default function PropCard({ item }) {
-  console.log('[PropCard]', item.title, '| operation_type:', item.operation_type, '| sale_price:', item.sale_price, '| rent_price:', item.rent_price);
   const router = useRouter();
   const href = `/propiedad/${item.id}`;
   const photos = item.photos || [];
   const img = photos[0] || 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=700&q=80';
   const operation = operationType(item);
   const isSaleRent = isSaleAndRent(item);
+  const isDebtSale = String(item.operation_type || '').trim() === 'Venta cediendo deuda';
   const salePrice = hasValue(item.sale_price) ? item.sale_price : item.price;
   const rentPrice = item.rent_price;
   const opClass = operation.indexOf('Alquiler') === 0 ? 'b-rent' : 'b-sale';
@@ -63,6 +63,7 @@ export default function PropCard({ item }) {
           <p className="pprice">
             {item.currency || '$'}{fmtPrice(item.price)}
             {operation.indexOf('Alquiler') === 0 && <span>/mes</span>}
+            {isDebtSale && <span>/prima</span>}
           </p>
         )}
         {(item.beds || item.baths || item.area || item.parking) && (

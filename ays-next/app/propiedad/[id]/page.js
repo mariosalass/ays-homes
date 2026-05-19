@@ -59,6 +59,7 @@ export default async function PropiedadPage({ params }) {
   const photos = item.photos || [];
   const operation = operationType(item);
   const isSaleRent = isSaleAndRent(item);
+  const isDebtSale = String(item.operation_type || '').trim() === 'Venta cediendo deuda';
   const salePrice = hasValue(item.sale_price) ? item.sale_price : item.price;
   const rentPrice = item.rent_price;
   const opClass = operation.indexOf('Alquiler') === 0 ? 'b-rent' : 'b-sale';
@@ -96,9 +97,17 @@ export default async function PropiedadPage({ params }) {
               </div>
             ) : (
               <p className="det-price">
+                {isDebtSale && <span style={{ fontSize: '1rem', fontWeight: 500 }}>Prima: </span>}
                 {item.currency || '$'}{fmtPrice(item.price)}
                 {operation.indexOf('Alquiler') === 0 && <span>/mes</span>}
               </p>
+            )}
+
+            {item.finance_notes && (
+              <div className="ibox">
+                <h3>Notas financieras</h3>
+                <p style={{ fontSize: '14.5px', lineHeight: 1.75 }}>{item.finance_notes}</p>
+              </div>
             )}
 
             {(item.beds || item.baths || item.area || item.parking) && (
@@ -117,13 +126,6 @@ export default async function PropiedadPage({ params }) {
               <div className="ibox">
                 <h3>Descripción</h3>
                 <p style={{ fontSize: '14.5px', color: 'var(--teal)', lineHeight: 1.75 }}>{item.description}</p>
-              </div>
-            )}
-
-            {item.finance_notes && (
-              <div className="ibox">
-                <h3>Notas financieras</h3>
-                <p style={{ fontSize: '14.5px', lineHeight: 1.75 }}>{item.finance_notes}</p>
               </div>
             )}
 

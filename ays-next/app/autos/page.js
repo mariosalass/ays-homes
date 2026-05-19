@@ -7,7 +7,7 @@ export const metadata = {
   description: 'Encontrá el vehículo perfecto. Autos seminuevos con asesoría completa en Costa Rica.',
 };
 
-export const revalidate = 60;
+export const revalidate = 0;
 
 export default async function AutosPage() {
   let cars = [];

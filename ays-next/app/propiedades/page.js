@@ -7,7 +7,7 @@ export const metadata = {
   description: 'Explorá casas, apartamentos, locales, oficinas y terrenos en Costa Rica.',
 };
 
-export const revalidate = 60;
+export const revalidate = 0;
 
 export default async function PropiedadesPage() {
   let properties = [];

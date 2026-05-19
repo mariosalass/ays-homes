@@ -2,7 +2,7 @@ import PageLayout from '@/components/PageLayout';
 import BusinessCard from '@/components/BusinessCard';
 import { createSupabaseClient } from '@/lib/supabase';
 
-export const revalidate = 60;
+export const revalidate = 0;
 
 export const metadata = {
   title: 'Negocios en Venta y Traspaso · AyS Soluciones Comerciales',
