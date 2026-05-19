@@ -378,7 +378,8 @@ img{display:block;max-width:100%}
     <div class="login-logo">AyS</div>
     <h1>Panel Admin</h1>
     <p>Ingresá para gestionar las publicaciones</p>
-    <div class="login-err" id="login-err">Contraseña incorrecta. Intentá de nuevo.</div>
+    <div class="login-err" id="login-err">Email o contraseña incorrectos. Intentá de nuevo.</div>
+    <div class="lf"><label>Email</label><input type="email" id="email-input" placeholder="correo@ejemplo.com" autocomplete="email"></div>
     <div class="lf"><label>Contraseña</label><input type="password" id="pwd-input" placeholder="••••••••" autocomplete="current-password"></div>
     <button class="btn-login" id="btn-login">Entrar <i class="fas fa-arrow-right"></i></button>
   </div>
@@ -465,10 +466,6 @@ img{display:block;max-width:100%}
           <label>Clave anónima (anon key)</label>
           <input type="text" id="cfg-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5c...">
           <p class="mf-hint">Usá la clave <strong>anon public</strong>, no la service_role.</p>
-        </div>
-        <div class="mf">
-          <label>Contraseña del panel admin</label>
-          <input type="password" id="cfg-pwd" placeholder="Cambiar contraseña (dejar vacío para no cambiar)">
         </div>
         <button class="btn-save-config" onclick="saveConfig()"><i class="fas fa-save"></i> Guardar configuración</button>
       </div>
@@ -746,13 +743,6 @@ img{display:block;max-width:100%}
 <div class="toast" id="toast"></div>
 
 <script>
-// ── SESIÓN: verificar antes de renderizar cualquier cosa ──
-var _hasSession = localStorage.getItem('ays_admin_session') === 'true';
-if(_hasSession){
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').classList.add('visible');
-}
-
 // ── CONFIG PERSISTENCE ──
 var CFG_KEY = 'ays_admin_config';
 function loadConfig(){
@@ -760,18 +750,45 @@ function loadConfig(){
 }
 function saveConfigData(d){ localStorage.setItem(CFG_KEY, JSON.stringify(d)); }
 
-// ── DEFAULT ADMIN PASSWORD (change in Config tab) ──
-var DEFAULT_PWD = 'ays2025admin';
+// ── AUTH ──
+var DEFAULT_SB_URL = 'https://mlrglzzxrfvbkucrtffd.supabase.co';
+var DEFAULT_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1scmdsenp4cmZ2Ymt1Y3J0ZmZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5MDc1MTQsImV4cCI6MjA5MDQ4MzUxNH0.MI3N5PR3IkAYgBT1cHOQhxdQDcwziMWLzt3zjuLWTZM';
+var ALLOWED_ADMIN_EMAILS = [
+  'marioantonio228@gmail.com',
+  'asalasc3@gmail.com',
+  'susabazo@gmail.com'
+];
+var currentUser = null;
 
 // ── SUPABASE CLIENT ──
 var sb = null;
-function initSupabase(){
+var sbConfigSig = '';
+function initSupabase(force){
   var cfg = loadConfig();
-  if(cfg.sbUrl && cfg.sbKey){
-    sb = supabase.createClient(cfg.sbUrl, cfg.sbKey);
+  var sbUrl = cfg.sbUrl || DEFAULT_SB_URL;
+  var sbKey = cfg.sbKey || DEFAULT_SB_KEY;
+  if(sbUrl && sbKey){
+    var sig = sbUrl+'|'+sbKey;
+    if(sb && sbConfigSig === sig && !force) return true;
+    sb = supabase.createClient(sbUrl, sbKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    });
+    sbConfigSig = sig;
     return true;
   }
   return false;
+}
+
+function adminEmail(user){
+  return user && user.email ? String(user.email).toLowerCase() : '';
+}
+
+function isAllowedAdmin(user){
+  return ALLOWED_ADMIN_EMAILS.indexOf(adminEmail(user)) !== -1;
 }
 
 // ── STATE ──
@@ -787,10 +804,26 @@ var allCars = [];
 var allBiz = [];
 
 // ── LOGIN ──
+document.getElementById('email-input').addEventListener('keydown', function(e){
+  if(e.key==='Enter') doLogin();
+});
 document.getElementById('pwd-input').addEventListener('keydown', function(e){
   if(e.key==='Enter') doLogin();
 });
 document.getElementById('btn-login').addEventListener('click', doLogin);
+
+function showLogin(msg){
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('login-screen').style.display = 'flex';
+  var err = document.getElementById('login-err');
+  if(msg){
+    err.textContent = msg;
+    err.style.display = 'block';
+  } else {
+    err.style.display = 'none';
+  }
+  document.getElementById('pwd-input').value = '';
+}
 
 function showApp(){
   document.getElementById('login-screen').style.display = 'none';
@@ -798,33 +831,84 @@ function showApp(){
   initApp();
 }
 
-function doLogin(){
-  var cfg = loadConfig();
-  var correctPwd = cfg.adminPwd || DEFAULT_PWD;
-  var val = document.getElementById('pwd-input').value;
-  if(val === correctPwd){
-    localStorage.setItem('ays_admin_session', 'true');
+async function ensureAllowedSession(session, msg){
+  if(!session || !session.user){
+    currentUser = null;
+    showLogin();
+    return false;
+  }
+  if(!isAllowedAdmin(session.user)){
+    currentUser = null;
+    try{ await sb.auth.signOut(); }catch(e){}
+    showLogin(msg || 'Este usuario no tiene permiso para usar el admin.');
+    return false;
+  }
+  currentUser = session.user;
+  return true;
+}
+
+async function doLogin(){
+  if(!initSupabase()){
+    showLogin('No se pudo inicializar Supabase.');
+    return;
+  }
+
+  var email = document.getElementById('email-input').value.trim().toLowerCase();
+  var pwd = document.getElementById('pwd-input').value;
+  if(!email || !pwd){
+    showLogin('Ingresá email y contraseña.');
+    return;
+  }
+
+  var btn = document.getElementById('btn-login');
+  btn.disabled = true;
+  try{
+    var res = await sb.auth.signInWithPassword({email: email, password: pwd});
+    if(res.error) throw res.error;
+    var ok = await ensureAllowedSession(res.data.session, 'Este usuario no tiene permiso para usar el admin.');
+    if(ok){
+      document.getElementById('login-err').style.display = 'none';
+      document.getElementById('pwd-input').value = '';
+      showApp();
+    }
+  } catch(e){
+    showLogin('Email o contraseña incorrectos. Intentá de nuevo.');
+    document.getElementById('email-input').focus();
+  }
+  btn.disabled = false;
+}
+
+async function bootstrapAuth(){
+  if(!initSupabase()){
+    showLogin('No se pudo inicializar Supabase.');
+    return;
+  }
+  var res = await sb.auth.getSession();
+  if(res.error || !res.data.session){
+    showLogin();
+    return;
+  }
+  var ok = await ensureAllowedSession(res.data.session, 'Este usuario no tiene permiso para usar el admin.');
+  if(ok){
     showApp();
-  } else {
-    document.getElementById('login-err').style.display = 'block';
-    document.getElementById('pwd-input').value = '';
-    document.getElementById('pwd-input').focus();
   }
 }
 
-document.getElementById('btn-logout').addEventListener('click', function(){
-  localStorage.removeItem('ays_admin_session');
-  document.getElementById('app').classList.remove('visible');
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('pwd-input').value = '';
-  document.getElementById('login-err').style.display = 'none';
+document.getElementById('btn-logout').addEventListener('click', async function(){
+  try{
+    if(sb) await sb.auth.signOut();
+  } finally {
+    currentUser = null;
+    showLogin();
+    document.getElementById('email-input').focus();
+  }
 });
 
 // ── INIT APP ──
 function initApp(){
   var cfg = loadConfig();
-  document.getElementById('cfg-url').value = cfg.sbUrl || '';
-  document.getElementById('cfg-key').value = cfg.sbKey || '';
+  document.getElementById('cfg-url').value = cfg.sbUrl || DEFAULT_SB_URL || '';
+  document.getElementById('cfg-key').value = cfg.sbKey || DEFAULT_SB_KEY || '';
 
   var ok = initSupabase();
   if(!ok){
@@ -1436,13 +1520,12 @@ async function toggleFeatured(id, currentVal, kind){
 function saveConfig(){
   var url = document.getElementById('cfg-url').value.trim();
   var key = document.getElementById('cfg-key').value.trim();
-  var pwd = document.getElementById('cfg-pwd').value.trim();
   var cfg = loadConfig();
   if(url) cfg.sbUrl = url;
   if(key) cfg.sbKey = key;
-  if(pwd) cfg.adminPwd = pwd;
+  if(cfg.adminPwd) delete cfg.adminPwd;
   saveConfigData(cfg);
-  var ok = initSupabase();
+  var ok = initSupabase(true);
   if(ok){
     document.getElementById('setup-banner').style.display = 'none';
     loadAll();
@@ -1478,8 +1561,8 @@ function fmtPrice(p){
   return n.toLocaleString('es-CR');
 }
 
-// Llamar initApp si había sesión guardada (todas las funciones ya definidas)
-if(_hasSession){ initApp(); }
+// Restaurar sesión real de Supabase si existe
+bootstrapAuth();
 </script>
 </body>
 </html>
