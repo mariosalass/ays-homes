@@ -1748,6 +1748,14 @@ function formatAdminListPrice(item, kind){
   var cur = item.currency || '$';
   if(kind === 'property'){
     var op = getPropertyOperation(item);
+    if(String(item.operation_type||'').trim() === 'Venta y Alquiler'){
+      var sale = item.sale_price || item.price;
+      var rent = item.rent_price;
+      var parts = [];
+      if(sale) parts.push('Venta: '+cur+fmtPrice(sale));
+      if(rent) parts.push('Alquiler: '+cur+fmtPrice(rent)+'<span style="font-size:13px;font-weight:400;color:var(--muted)">/mes</span>');
+      if(parts.length) return parts.join(' · ');
+    }
     var prefix = op === 'Venta cediendo deuda' ? 'Prima ' : '';
     var suffix = (op === 'Alquiler' || op === 'Alquiler con opción de compra') ? '<span style="font-size:13px;font-weight:400;color:var(--muted)">/mes</span>' : '';
     return prefix + cur + fmtPrice(item.price) + suffix;
