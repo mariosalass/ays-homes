@@ -833,7 +833,6 @@ var editingId = null;
 var pendingPhotos = []; // {file, url, uploaded}
 var uploadedUrls = []; // final urls after upload
 var amenidades = [];
-var confirmCallback = null;
 var allProps = [];
 var allCars = [];
 var allBiz = [];
@@ -1552,7 +1551,8 @@ function editItem(id, type){
 
 // ── DELETE ──
 function confirmDelete(id, type){
-  confirmCallback = async function(){
+  document.getElementById('confirm-overlay').classList.add('open');
+  document.getElementById('btn-confirm-del').onclick = async function(){
     closeConfirm();
     if(!sb){ showToast('Supabase no configurado','err'); return; }
     var {error} = await sb.from('listings').delete().eq('id',id);
@@ -1562,8 +1562,6 @@ function confirmDelete(id, type){
     else if(type==='business') await loadBiz();
     else await loadCars();
   };
-  document.getElementById('confirm-overlay').classList.add('open');
-  document.getElementById('btn-confirm-del').onclick = confirmCallback;
 }
 function closeConfirm(){
   document.getElementById('confirm-overlay').classList.remove('open');
