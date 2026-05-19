@@ -58,11 +58,13 @@ export default async function PropiedadPage({ params }) {
 
   const photos = item.photos || [];
   const operation = operationType(item);
-  const isSaleRent = isSaleAndRent(item);
-  const isDebtSale = String(item.operation_type || '').trim() === 'Venta cediendo deuda';
-  const salePrice = hasValue(item.sale_price) ? item.sale_price : item.price;
-  const rentPrice = item.rent_price;
-  const opClass = operation.indexOf('Alquiler') === 0 ? 'b-rent' : 'b-sale';
+  const isSaleRent   = isSaleAndRent(item);
+  const isDebtSale   = String(item.operation_type || '').trim() === 'Venta cediendo deuda';
+  const isRentOption = String(item.operation_type || '').trim() === 'Alquiler con opción de compra';
+  const salePrice    = hasValue(item.sale_price) ? item.sale_price : item.price;
+  const rentPrice    = item.rent_price;
+  const cur          = item.currency || '$';
+  const opClass      = operation.indexOf('Alquiler') === 0 ? 'b-rent' : 'b-sale';
 
   const schema = {
     '@context': 'https://schema.org',
@@ -92,15 +94,51 @@ export default async function PropiedadPage({ params }) {
             {item.location && <p className="det-loc"><i className="fas fa-location-dot" /> {item.location}</p>}
             {isSaleRent ? (
               <div className="det-price" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {hasValue(salePrice) && <div>Venta: {item.currency || '$'}{fmtPrice(salePrice)}</div>}
-                {hasValue(rentPrice) && <div>Alquiler: {item.currency || '$'}{fmtPrice(rentPrice)} <span>/mes</span></div>}
+                {hasValue(salePrice) && <div>Venta: {cur}{fmtPrice(salePrice)}</div>}
+                {hasValue(rentPrice) && <div>Alquiler: {cur}{fmtPrice(rentPrice)} <span>/mes</span></div>}
               </div>
             ) : (
               <p className="det-price">
                 {isDebtSale && <span style={{ fontSize: '1rem', fontWeight: 500 }}>Prima: </span>}
-                {item.currency || '$'}{fmtPrice(item.price)}
+                {cur}{fmtPrice(item.price)}
                 {operation.indexOf('Alquiler') === 0 && <span>/mes</span>}
               </p>
+            )}
+
+            {(isDebtSale || isRentOption) && (
+              <div className="ibox">
+                <h3>Detalle financiero</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  {isRentOption && (<>
+                    {hasValue(item.down_payment) && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid var(--border)', fontSize: '14.5px' }}>
+                        <span style={{ color: 'var(--muted)' }}>Prima inicial</span>
+                        <span style={{ fontWeight: 600 }}>{cur}{fmtPrice(item.down_payment)}</span>
+                      </div>
+                    )}
+                    {hasValue(item.option_purchase_price) && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', fontSize: '14.5px' }}>
+                        <span style={{ color: 'var(--muted)' }}>Precio de compra pactado</span>
+                        <span style={{ fontWeight: 600 }}>{cur}{fmtPrice(item.option_purchase_price)}</span>
+                      </div>
+                    )}
+                  </>)}
+                  {isDebtSale && (<>
+                    {hasValue(item.sale_price) && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid var(--border)', fontSize: '14.5px' }}>
+                        <span style={{ color: 'var(--muted)' }}>Valor total de la propiedad</span>
+                        <span style={{ fontWeight: 600 }}>{cur}{fmtPrice(item.sale_price)}</span>
+                      </div>
+                    )}
+                    {hasValue(item.debt_amount) && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', fontSize: '14.5px' }}>
+                        <span style={{ color: 'var(--muted)' }}>Deuda cedida</span>
+                        <span style={{ fontWeight: 600 }}>{cur}{fmtPrice(item.debt_amount)}</span>
+                      </div>
+                    )}
+                  </>)}
+                </div>
+              </div>
             )}
 
             {item.finance_notes && (
