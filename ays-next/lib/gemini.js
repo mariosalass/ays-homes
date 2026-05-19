@@ -28,6 +28,7 @@ Respondé SOLO con el párrafo, sin título, sin explicaciones, sin comillas.`;
       }
     );
     const data = await res.json();
+    console.log('[gemini] respuesta completa:', JSON.stringify(data, null, 2));
     return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
   } catch {
     return '';

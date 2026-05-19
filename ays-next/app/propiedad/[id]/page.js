@@ -39,6 +39,7 @@ export default async function PropiedadPage({ params }) {
   if (!item) notFound();
 
   const seoText = await generateSEOText(item);
+  console.log('[propiedad] seoText generado:', seoText);
 
   const photos = item.photos || [];
   const opClass = item.operation === 'Alquiler' ? 'b-rent' : 'b-sale';
