@@ -1,3 +1,5 @@
+export const revalidate = 0;
+
 import { createSupabaseClient } from '@/lib/supabase';
 import PageLayout from '@/components/PageLayout';
 import Lightbox from '@/components/Lightbox';
