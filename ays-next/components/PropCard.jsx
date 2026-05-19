@@ -56,8 +56,8 @@ export default function PropCard({ item }) {
         {isSaleRent ? (
           <p className="pprice">
             {hasValue(salePrice) && <>{item.currency || '$'}{fmtPrice(salePrice)}</>}
-            {hasValue(salePrice) && hasValue(rentPrice) && <span> · </span>}
-            {hasValue(rentPrice) && <span>{item.currency || '$'}{fmtPrice(rentPrice)}/mes</span>}
+            {hasValue(salePrice) && hasValue(rentPrice) && ' · '}
+            {hasValue(rentPrice) && <>{item.currency || '$'}{fmtPrice(rentPrice)}/mes</>}
           </p>
         ) : (
           <p className="pprice">
