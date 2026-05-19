@@ -34,6 +34,7 @@ export default function CarCard({ item }) {
           {item.km           && <span className="pspec"><i className="fas fa-tachometer-alt" /> {item.km}</span>}
           {item.transmission && <span className="pspec"><i className="fas fa-cog" />            {item.transmission}</span>}
           {item.fuel         && <span className="pspec"><i className="fas fa-gas-pump" />       {item.fuel}</span>}
+          {item.engine       && <span className="pspec"><i className="fas fa-gauge" />          {item.engine}</span>}
         </div>
         <p className="pprice">{item.currency || '$'}{fmtPrice(item.price)}</p>
         <div className="pacts">

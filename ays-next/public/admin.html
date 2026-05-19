@@ -634,6 +634,12 @@ img{display:block;max-width:100%}
           <input type="text" id="f-car-color" placeholder="Ej: Blanco">
         </div>
       </div>
+      <div class="mf-row">
+        <div class="mf">
+          <label>Cilindrada</label>
+          <input type="text" id="f-car-engine" placeholder="Ej: 1600cc, 2.0L">
+        </div>
+      </div>
     </div>
 
     <!-- Campos negocio -->
@@ -1011,7 +1017,7 @@ function handleOverlayClick(e){
 
 function resetForm(){
   ['f-title','f-price','f-desc','f-beds','f-baths','f-parking','f-area',
-   'f-car-brand','f-car-year','f-car-km','f-car-color',
+   'f-car-brand','f-car-year','f-car-km','f-car-color','f-car-engine',
    'f-biz-type','f-biz-income','f-biz-reason','f-biz-includes'].forEach(function(id){
     var el = document.getElementById(id);
     if(el) el.value = '';
@@ -1086,6 +1092,7 @@ function populateForm(item, type){
     document.getElementById('f-car-trans').value = item.transmission||'Automática';
     document.getElementById('f-car-fuel').value = item.fuel||'Gasolina';
     document.getElementById('f-car-color').value = item.color||'';
+    document.getElementById('f-car-engine').value = item.engine||'';
   }
 
   // existing photos
@@ -1365,6 +1372,7 @@ async function saveItem(){
       row.transmission = document.getElementById('f-car-trans').value;
       row.fuel = document.getElementById('f-car-fuel').value;
       row.color = document.getElementById('f-car-color').value.trim();
+      row.engine = document.getElementById('f-car-engine').value.trim();
     }
 
     var res;

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect width="64" height="64" rx="12" fill="#1b5e6e"/>
+  <g fill="white">
+    <!-- roof -->
+    <polygon points="32,14 14,30 18,30 18,50 28,50 28,38 36,38 36,50 46,50 46,30 50,30" />
+  </g>
+</svg>

@@ -66,7 +66,7 @@ export default async function VehiculoPage({ params }) {
             <h1 className="det-title">{item.title}</h1>
             <p className="det-price">{item.currency || '$'}{fmtPrice(item.price)}</p>
 
-            {(item.km || item.transmission || item.fuel || item.color) && (
+            {(item.km || item.transmission || item.fuel || item.color || item.engine) && (
               <div className="ibox">
                 <h3>Especificaciones</h3>
                 <div className="specs-row">
@@ -74,6 +74,7 @@ export default async function VehiculoPage({ params }) {
                   {item.transmission && <div className="spec-i"><i className="fas fa-cog" /><span className="sv">{item.transmission}</span><span className="sl">Transmisión</span></div>}
                   {item.fuel && <div className="spec-i"><i className="fas fa-gas-pump" /><span className="sv">{item.fuel}</span><span className="sl">Combustible</span></div>}
                   {item.color && <div className="spec-i"><i className="fas fa-palette" /><span className="sv">{item.color}</span><span className="sl">Color</span></div>}
+                  {item.engine && <div className="spec-i"><i className="fas fa-gauge" /><span className="sv">{item.engine}</span><span className="sl">Cilindrada</span></div>}
                 </div>
               </div>
             )}
