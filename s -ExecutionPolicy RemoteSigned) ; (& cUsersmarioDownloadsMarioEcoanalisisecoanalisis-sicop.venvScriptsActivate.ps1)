@@ -1,0 +1,76 @@
+warning: in the working copy of 'ays-next/public/admin.html', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/ays-next/public/admin.html b/ays-next/public/admin.html[m
+[1mindex 0d396f2..5c29291 100644[m
+[1m--- a/ays-next/public/admin.html[m
+[1m+++ b/ays-next/public/admin.html[m
+[36m@@ -537,6 +537,7 @@[m [mimg{display:block;max-width:100%}[m
+           <select id="f-operation-type" onchange="updatePropertyFinanceFields()">[m
+             <option value="Venta">Venta</option>[m
+             <option value="Alquiler">Alquiler</option>[m
+[32m+[m[32m            <option value="Venta y Alquiler">Venta y Alquiler</option>[m
+             <option value="Venta cediendo deuda">Venta cediendo deuda</option>[m
+             <option value="Alquiler con opción de compra">Alquiler con opción de compra</option>[m
+           </select>[m
+[36m@@ -1178,7 +1179,7 @@[m [mfunction populateForm(item, type){[m
+     var opType = getPropertyOperation(item);[m
+     document.getElementById('f-prop-type').value = item.prop_type||'Casa';[m
+     document.getElementById('f-operation-type').value = opType;[m
+[31m-    setMoneyInputValue('f-sale-price', item.sale_price, (opType==='Venta' || opType==='Venta cediendo deuda') ? item.price : '');[m
+[32m+[m[32m    setMoneyInputValue('f-sale-price', item.sale_price, (opType==='Venta' || opType==='Venta y Alquiler' || opType==='Venta cediendo deuda') ? item.price : '');[m
+     setMoneyInputValue('f-rent-price', item.rent_price, (opType==='Alquiler' || opType==='Alquiler con opción de compra') ? item.price : '');[m
+     setMoneyInputValue('f-debt-amount', item.debt_amount, '');[m
+     setMoneyInputValue('f-down-payment', item.down_payment, opType==='Venta cediendo deuda' ? item.price : '');[m
+[36m@@ -1469,10 +1470,11 @@[m [masync function saveItem(){[m
+       var debtAmount = moneyValue('f-debt-amount');[m
+       var downPayment = moneyValue('f-down-payment');[m
+       var optionPurchasePrice = moneyValue('f-option-purchase-price');[m
+[32m+[m[32m      row.available_operations = availableOperationsFor(opType);[m
+       row.operation_type = opType;[m
+       row.operation = legacyOperationFor(opType);[m
+[31m-      row.sale_price = (opType==='Venta' || opType==='Venta cediendo deuda') ? salePrice : null;[m
+[31m-      row.rent_price = (opType==='Alquiler' || opType==='Alquiler con opción de compra') ? rentPrice : null;[m
+[32m+[m[32m      row.sale_price = (opType==='Venta' || opType==='Venta y Alquiler' || opType==='Venta cediendo deuda') ? salePrice : null;[m
+[32m+[m[32m      row.rent_price = (opType==='Alquiler' || opType==='Venta y Alquiler' || opType==='Alquiler con opción de compra') ? rentPrice : null;[m
+       row.debt_amount = opType==='Venta cediendo deuda' ? debtAmount : null;[m
+       row.down_payment = (opType==='Venta cediendo deuda' || opType==='Alquiler con opción de compra') ? downPayment : null;[m
+       row.option_purchase_price = opType==='Alquiler con opción de compra' ? optionPurchasePrice : null;[m
+[36m@@ -1622,6 +1624,7 @@[m [mfunction normalizePropertyOperation(op){[m
+   var v = String(op||'').trim().toLowerCase();[m
+   if(v === 'alquiler con opción de compra' || v === 'alquiler con opcion de compra' || v === 'alquiler con opción') return 'Alquiler con opción de compra';[m
+   if(v === 'venta cediendo deuda' || v === 'cediendo deuda') return 'Venta cediendo deuda';[m
+[32m+[m[32m  if(v === 'venta y alquiler' || v === 'venta/alquiler' || v === 'venta alquiler') return 'Venta y Alquiler';[m
+   if(v === 'alquiler') return 'Alquiler';[m
+   return 'Venta';[m
+ }[m
+[36m@@ -1635,6 +1638,12 @@[m [mfunction getPropertyOperation(item){[m
+ function legacyOperationFor(op){[m
+   return normalizePropertyOperation(op).indexOf('Alquiler') === 0 ? 'Alquiler' : 'Venta';[m
+ }[m
+[32m+[m[32mfunction availableOperationsFor(op){[m
+[32m+[m[32m  op = normalizePropertyOperation(op);[m
+[32m+[m[32m  if(op === 'Venta y Alquiler' || op === 'Alquiler con opción de compra') return ['Venta', 'Alquiler'];[m
+[32m+[m[32m  if(op === 'Alquiler') return ['Alquiler'];[m
+[32m+[m[32m  return ['Venta'];[m
+[32m+[m[32m}[m
+ function moneyValue(id){[m
+   var el = document.getElementById(id);[m
+   if(!el) return null;[m
+[36m@@ -1666,6 +1675,7 @@[m [mfunction propertyPrimaryPrice(op, salePrice, rentPrice, downPayment){[m
+   op = normalizePropertyOperation(op);[m
+   if(op === 'Venta') n = salePrice;[m
+   else if(op === 'Alquiler') n = rentPrice;[m
+[32m+[m[32m  else if(op === 'Venta y Alquiler') n = salePrice;[m
+   else if(op === 'Venta cediendo deuda') n = downPayment;[m
+   else if(op === 'Alquiler con opción de compra') n = rentPrice;[m
+   return n === null || n === undefined || isNaN(n) ? '' : String(n);[m
+[36m@@ -1698,8 +1708,8 @@[m [mfunction updatePropertyFinanceFields(){[m
+   showEl('property-finance-fields', isProperty);[m
+   if(!isProperty) return;[m
+   var op = getSelectedPropertyOperation();[m
+[31m-  var showSale = op === 'Venta' || op === 'Venta cediendo deuda';[m
+[31m-  var showRent = op === 'Alquiler' || op === 'Alquiler con opción de compra';[m
+[32m+[m[32m  var showSale = op === 'Venta' || op === 'Venta y Alquiler' || op === 'Venta cediendo deuda';[m
+[32m+[m[32m  var showRent = op === 'Alquiler' || op === 'Venta y Alquiler' || op === 'Alquiler con opción de compra';[m
+   var showDebt = op === 'Venta cediendo deuda';[m
+   var showDown = op === 'Venta cediendo deuda' || op === 'Alquiler con opción de compra';[m
+   var showOption = op === 'Alquiler con opción de compra';[m

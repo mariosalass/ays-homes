@@ -1,5 +1,4 @@
 import { createSupabaseClient } from '@/lib/supabase';
-import { generateSEOText } from '@/lib/gemini';
 import PageLayout from '@/components/PageLayout';
 import Lightbox from '@/components/Lightbox';
 import DetailContactForm from '@/components/DetailContactForm';
@@ -15,16 +14,14 @@ function currency(c) {
 
 export async function generateMetadata({ params }) {
   const sb = createSupabaseClient();
-  const { data: item } = await sb.from('listings').select('title,description,photos,sector,business_type,operation,location,currency,price,provincia,canton,distrito').eq('id', params.id).single();
+  const { data: item } = await sb.from('listings').select('title,description,photos,sector,business_type,operation,location,currency,price').eq('id', params.id).single();
   if (!item) return { title: 'Negocio · AyS' };
 
   const typeLabel = item.business_type || item.sector || 'Negocio';
   const loc = item.location ? ` en ${item.location}` : '';
   const op = item.operation || 'venta';
   const title = `${typeLabel} en ${op}${loc} — ${item.currency || '$'}${fmtPrice(item.price)} | AyS`;
-  const seoText = await generateSEOText(item);
-  const desc = seoText.slice(0, 155)
-    || (item.description || '').slice(0, 155)
+  const desc = (item.description || '').slice(0, 155)
     || `${typeLabel} en ${op}${loc}. Precio: ${item.currency || '$'}${fmtPrice(item.price)}`;
   const img = item.photos?.[0] || '';
 
@@ -49,8 +46,6 @@ export default async function NegocioPage({ params }) {
       </div>
     </PageLayout>
   );
-
-  const seoText = await generateSEOText(item);
 
   const photos = item.photos || [];
 
@@ -144,12 +139,6 @@ export default async function NegocioPage({ params }) {
           </div>
           <DetailContactForm item={{ ...item, kind: 'business' }} />
         </div>
-        {seoText && (
-          <div className="ibox" style={{ marginTop: '2rem' }}>
-            <h3>Encontrá más negocios similares</h3>
-            <p className="text-sm text-gray-500" style={{ fontSize: '0.8rem', color: '#9ca3af', lineHeight: 1.7 }}>{seoText}</p>
-          </div>
-        )}
       </div>
     </PageLayout>
   );
