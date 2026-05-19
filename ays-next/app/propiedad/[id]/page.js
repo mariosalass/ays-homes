@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabase';
+import { generateSEOText } from '@/lib/gemini';
 import PageLayout from '@/components/PageLayout';
 import Lightbox from '@/components/Lightbox';
 import DetailContactForm from '@/components/DetailContactForm';
@@ -13,12 +14,14 @@ function currency(c) { return c === '₡' ? 'CRC' : 'USD'; }
 
 export async function generateMetadata({ params }) {
   const sb = createSupabaseClient();
-  const { data: item } = await sb.from('listings').select('title,description,photos,prop_type,operation,location,currency,price,provincia,canton,distrito').eq('id', params.id).single();
+  const { data: item } = await sb.from('listings').select('title,description,photos,prop_type,operation,location,currency,price,provincia,canton,distrito,beds,baths,area').eq('id', params.id).single();
   if (!item) return { title: 'Propiedad · AyS' };
 
   const loc = [item.distrito, item.canton, item.provincia].filter(Boolean).join(', ') || item.location || 'Costa Rica';
   const title = `${item.prop_type || 'Propiedad'} en ${item.operation || 'venta'} en ${loc} — ${item.currency || '$'}${fmtPrice(item.price)} | AyS`;
-  const desc = (item.description || '').slice(0, 155)
+  const seoText = await generateSEOText(item);
+  const desc = seoText.slice(0, 155)
+    || (item.description || '').slice(0, 155)
     || `${item.prop_type || 'Propiedad'} en ${item.operation || 'venta'} en ${loc}. Precio: ${item.currency || '$'}${fmtPrice(item.price)}`;
   const img = item.photos?.[0] || '';
 
@@ -34,6 +37,8 @@ export default async function PropiedadPage({ params }) {
   const sb = createSupabaseClient();
   const { data: item } = await sb.from('listings').select('*').eq('id', params.id).single();
   if (!item) notFound();
+
+  const seoText = await generateSEOText(item);
 
   const photos = item.photos || [];
   const opClass = item.operation === 'Alquiler' ? 'b-rent' : 'b-sale';
@@ -101,6 +106,12 @@ export default async function PropiedadPage({ params }) {
           </div>
           <DetailContactForm item={item} />
         </div>
+        {seoText && (
+          <div className="ibox" style={{ marginTop: '2rem' }}>
+            <h3>Encontrá más propiedades similares</h3>
+            <p className="text-sm text-gray-500" style={{ fontSize: '0.8rem', color: '#9ca3af', lineHeight: 1.7 }}>{seoText}</p>
+          </div>
+        )}
       </div>
     </PageLayout>
   );

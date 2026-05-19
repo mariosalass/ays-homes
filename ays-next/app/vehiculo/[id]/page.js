@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabase';
+import { generateSEOText } from '@/lib/gemini';
 import PageLayout from '@/components/PageLayout';
 import Lightbox from '@/components/Lightbox';
 import DetailContactForm from '@/components/DetailContactForm';
@@ -13,12 +14,14 @@ function currency(c) { return c === '₡' ? 'CRC' : 'USD'; }
 
 export async function generateMetadata({ params }) {
   const sb = createSupabaseClient();
-  const { data: item } = await sb.from('listings').select('title,description,photos,brand,year,currency,price').eq('id', params.id).single();
+  const { data: item } = await sb.from('listings').select('title,description,photos,brand,model,year,currency,price,location,provincia,canton,distrito').eq('id', params.id).single();
   if (!item) return { title: 'Vehículo · AyS' };
 
   const model = item.title || item.brand || 'Vehículo';
   const title = `${item.brand ? item.brand + ' ' : ''}${model}${item.year ? ' ' + item.year : ''} en venta — ${item.currency || '$'}${fmtPrice(item.price)} | AyS`;
-  const desc = (item.description || '').slice(0, 155)
+  const seoText = await generateSEOText(item);
+  const desc = seoText.slice(0, 155)
+    || (item.description || '').slice(0, 155)
     || `${item.brand || 'Auto'} ${model}${item.year ? ' ' + item.year : ''} en venta. Precio: ${item.currency || '$'}${fmtPrice(item.price)}`;
   const img = item.photos?.[0] || '';
 
@@ -34,6 +37,8 @@ export default async function VehiculoPage({ params }) {
   const sb = createSupabaseClient();
   const { data: item } = await sb.from('listings').select('*').eq('id', params.id).single();
   if (!item) notFound();
+
+  const seoText = await generateSEOText(item);
 
   const photos = item.photos || [];
 
@@ -99,6 +104,12 @@ export default async function VehiculoPage({ params }) {
           </div>
           <DetailContactForm item={item} />
         </div>
+        {seoText && (
+          <div className="ibox" style={{ marginTop: '2rem' }}>
+            <h3>Encontrá más vehículos similares</h3>
+            <p className="text-sm text-gray-500" style={{ fontSize: '0.8rem', color: '#9ca3af', lineHeight: 1.7 }}>{seoText}</p>
+          </div>
+        )}
       </div>
     </PageLayout>
   );
