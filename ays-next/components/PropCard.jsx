@@ -17,7 +17,7 @@ export default function PropCard({ item }) {
   return (
     <div className="pcard" onClick={() => router.push(href)} style={{ cursor: 'pointer' }}>
       <div className="pimg">
-        <img src={img} loading="lazy" alt={item.title || ''} />
+        <img src={img} width="700" height="460" loading="lazy" decoding="async" alt={item.title || ''} />
         <div className="pbadges">
           <span className={`badge ${opClass}`}>{item.operation || 'Venta'}</span>
           {item.featured && <span className="badge b-feat">Destacado</span>}

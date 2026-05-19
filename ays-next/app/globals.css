@@ -1,6 +1,6 @@
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css');
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth;font-size:18px}
+html{scroll-behavior:smooth;scroll-padding-top:var(--nav-h);font-size:18px}
 body{font-family:'Inter',sans-serif;color:#0f1923;background:#fff;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 img{display:block;max-width:100%}
 button,select,input,textarea{font-family:inherit}
@@ -10,7 +10,7 @@ a{text-decoration:none}
   --gold:#c08b2f;--gold-l:#faf3e8;
   --text:#0f1923;--muted:#64748b;--border:#e2e8f0;--bg:#f8fafc;--white:#fff;
   --r:14px;--r-sm:8px;--sh:0 4px 24px rgba(0,0,0,.07);--sh-md:0 8px 40px rgba(0,0,0,.12);
-  --wrap:1320px;
+  --wrap:1320px;--nav-h:72px;
 }
 
 /* NAVBAR */
@@ -43,12 +43,12 @@ a{text-decoration:none}
 #navbar.scrolled .nav-menu-btn{border-color:var(--border);background:#fff;color:var(--text)}
 
 /* HERO */
-.hero{position:relative;width:100%;height:100vh;min-height:700px;display:flex;align-items:center;overflow:hidden;padding-top:72px}
+.hero{position:relative;width:100%;height:auto;min-height:100vh;min-height:100svh;min-height:max(700px,100svh);display:flex;align-items:center;overflow:hidden;overflow-anchor:none;padding-top:var(--nav-h)}
 .hero-bg{position:absolute;inset:0;z-index:0;background:url('https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=1600&q=85') center/cover no-repeat}
 .hero-overlay{position:absolute;inset:0;z-index:1;background:linear-gradient(105deg,rgba(19,69,85,.88) 0%,rgba(27,94,110,.70) 55%,rgba(27,94,110,.30) 100%)}
 .hero-content{position:relative;z-index:2;padding:0 6rem;max-width:820px;animation:fadeUp .7s ease both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
-.hero-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:rgba(255,255,255,.92);padding:7px 16px;border-radius:50px;font-size:14px;font-weight:500;margin-bottom:1.8rem;backdrop-filter:blur(4px)}
+.hero-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:rgba(255,255,255,.92);padding:7px 16px;border-radius:50px;font-size:14px;font-weight:500;margin-bottom:1.8rem;backdrop-filter:blur(4px);max-width:100%;line-height:1.35}
 .hero-pill span{width:8px;height:8px;background:var(--gold);border-radius:50%;display:block}
 .hero h1{font-size:clamp(2.6rem,5vw,3.8rem);font-weight:800;color:#fff;line-height:1.1;margin-bottom:1.3rem;letter-spacing:-.02em}
 .hero h1 em{color:var(--gold);font-style:normal}
@@ -197,7 +197,7 @@ footer ul li a:hover{color:#fff}
 /* PROP CARD */
 .pcard{background:#fff;border-radius:16px;overflow:hidden;border:1px solid var(--border);transition:transform .25s,box-shadow .25s}
 .pcard:hover{transform:translateY(-5px);box-shadow:var(--sh-md);border-color:transparent}
-.pimg{position:relative;height:230px;overflow:hidden}
+.pimg{position:relative;height:230px;aspect-ratio:3/2;overflow:hidden;overflow-anchor:none;background:#e2e8f0}
 .pimg img{width:100%;height:100%;object-fit:cover;transition:transform .45s ease}
 .pcard:hover .pimg img{transform:scale(1.06)}
 .gal-badge{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);color:#fff;font-size:13px;font-weight:600;padding:5px 11px;border-radius:7px;display:flex;align-items:center;gap:6px;pointer-events:none}
@@ -220,9 +220,9 @@ footer ul li a:hover{color:#fff}
 
 /* DETAIL */
 .det-page{margin-top:72px}
-.gal-hero{position:relative;height:80vh;min-height:420px;overflow:hidden;cursor:pointer;background:#111}
+.gal-hero{position:relative;height:80vh;height:80svh;min-height:420px;overflow:hidden;overflow-anchor:none;cursor:pointer;background:#e2e8f0}
 .gal-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:45%;background:linear-gradient(transparent,rgba(0,0,0,.55));z-index:3;pointer-events:none}
-.gal-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.gal-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;backface-visibility:hidden;will-change:opacity}
 @keyframes heroFadeIn{from{opacity:0}to{opacity:1}}
 .gal-hero-img-in{animation:heroFadeIn .6s ease forwards}
 .gal-ctr{position:absolute;bottom:18px;right:18px;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);color:#fff;font-size:14px;font-weight:600;padding:8px 16px;border-radius:10px;display:flex;align-items:center;gap:8px;pointer-events:none}
@@ -387,33 +387,38 @@ footer ul li a:hover{color:#fff}
   footer{grid-template-columns:repeat(2,1fr);padding:3rem 2rem}
 }
 @media (max-width:980px){
-  #navbar{padding:0 1rem;gap:.8rem;height:72px;max-height:72px;overflow:hidden}
+  #navbar{padding:0 1rem;gap:.8rem;height:var(--nav-h);max-height:var(--nav-h);overflow:visible}
   .nav-cta{display:none}
-  .nav-brand{flex-shrink:0}
+  .nav-brand{flex:1 1 auto;min-width:0;overflow:hidden}
+  .nav-brand-text{min-width:0}
   .nav-logo{width:40px;height:40px}
   .nb-h1{font-size:14px}
   .nb-p{font-size:11px}
   .nav-menu-btn{display:inline-flex;flex-shrink:0;margin-left:auto}
-  .nav-links{position:fixed;top:72px;left:0;right:0;background:#fff;border-bottom:1px solid var(--border);box-shadow:0 8px 26px rgba(15,25,35,.12);display:none;flex-direction:column;align-items:stretch;gap:0;padding:.4rem 1rem .9rem;max-height:calc(100vh - 72px);overflow-y:auto;z-index:210}
+  .nav-links{position:fixed;top:var(--nav-h);left:0;right:0;background:#fff;border-bottom:1px solid var(--border);box-shadow:0 8px 26px rgba(15,25,35,.12);display:none;flex-direction:column;align-items:stretch;gap:0;padding:.4rem 1rem .9rem;max-height:calc(100vh - var(--nav-h));max-height:calc(100svh - var(--nav-h));overflow-y:auto;z-index:210}
   #navbar.menu-open .nav-links{display:flex}
   .nav-link{font-size:15px;color:var(--text)!important;padding:.95rem .2rem;border-bottom:1px solid var(--border)}
   .nav-link:last-child{border-bottom:none}
   .nav-link::after{display:none}
-  .hero{min-height:620px}
+  .hero{align-items:flex-start;min-height:620px;min-height:max(620px,100svh);padding-top:calc(var(--nav-h) + 3rem);padding-bottom:3rem}
   .hero-content{padding:0 1.2rem}
+  .hero-pill{white-space:normal;margin-bottom:1.1rem}
+  .hero h1{margin-bottom:1rem}
+  .hero p{margin-bottom:1.6rem}
+  .hero-btns{margin-bottom:1.3rem}
   .section{padding:4.5rem 1rem}
   .svc-grid,.about-wrap,.ct-wrap,.det-layout{grid-template-columns:1fr}
   .agent-card img{height:300px}
   .avals{gap:1rem;justify-content:space-between}
   .soc-bar{padding:1rem;flex-direction:column;gap:.8rem;text-align:center}
   .cta-pills{gap:1rem;flex-wrap:wrap}
-  .filters{padding:1rem;top:72px}
+  .filters{padding:1rem;top:var(--nav-h)}
   .filter-top{flex-direction:column;align-items:stretch}
   .filter-toggle{justify-content:center}
   .fg-grid{grid-template-columns:repeat(2,1fr)}
   .listings{padding:2rem 1rem 4rem}
-  .det-page{margin-top:72px}
-  .gal-hero{height:70vh;min-height:320px}
+  .det-page{margin-top:var(--nav-h)}
+  .gal-hero{height:70vh;height:70svh;min-height:320px}
   .det-title{font-size:1.9rem}
   .det-price{font-size:2rem}
   .specs-row{grid-template-columns:repeat(2,1fr)}
@@ -430,9 +435,11 @@ footer ul li a:hover{color:#fff}
   .nav-logo{width:36px;height:36px;border-radius:8px}
   .nb-p{font-size:10px}
   .nb-h1{font-size:13px}
-  .hero{min-height:560px}
+  .hero{min-height:560px;min-height:max(560px,100svh);padding-top:calc(var(--nav-h) + 2.4rem);padding-bottom:2.4rem}
+  .hero-pill{font-size:12.5px;padding:6px 12px}
   .hero h1{font-size:clamp(1.8rem,9vw,2.2rem)}
   .hero p{font-size:15px}
+  .hero-links{flex-direction:column;gap:.75rem}
   .scroll-hint{display:none}
   .btn-gold,.btn-ghost,.btn-wapp,.btn-teal{width:100%;justify-content:center}
   .section{padding:3.6rem .85rem}
@@ -442,7 +449,7 @@ footer ul li a:hover{color:#fff}
   .pprice{font-size:20px}
   .fg-grid{grid-template-columns:1fr}
   .prop-grid{grid-template-columns:1fr}
-  .gal-hero{height:60vh;min-height:260px}
+  .gal-hero{height:60vh;height:60svh;min-height:260px}
   .gal-arr-fx{width:38px;height:38px;font-size:15px}
   .gal-arr-fx-l{left:8px}
   .gal-arr-fx-r{right:8px}

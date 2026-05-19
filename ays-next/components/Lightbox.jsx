@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 export default function Lightbox({ photos }) {
   const [heroIdx, setHeroIdx]         = useState(0);
@@ -15,10 +15,11 @@ export default function Lightbox({ photos }) {
   const lbTouchX     = useRef(null);
   const heroTouchX   = useRef(null);
   const didSwipe     = useRef(false);
+  const loadTokenRef = useRef(0);
 
   const n = photos.length;
 
-  const goHero = (newIdx) => {
+  const startHeroTransition = useCallback((newIdx) => {
     if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
     setPrevHeroIdx(heroIdxRef.current);
     setHeroIdx(newIdx);
@@ -28,7 +29,28 @@ export default function Lightbox({ photos }) {
       setPrevHeroIdx(null);
       setTransitioning(false);
     }, 700);
-  };
+  }, []);
+
+  const goHero = useCallback((newIdx) => {
+    if (newIdx === heroIdxRef.current || !photos[newIdx]) return;
+    const token = ++loadTokenRef.current;
+    if (typeof window === 'undefined') {
+      startHeroTransition(newIdx);
+      return;
+    }
+
+    let done = false;
+    const finish = () => {
+      if (done || token !== loadTokenRef.current) return;
+      done = true;
+      startHeroTransition(newIdx);
+    };
+    const img = new Image();
+    img.onload = finish;
+    img.onerror = finish;
+    img.src = photos[newIdx];
+    if (img.complete) finish();
+  }, [photos, startHeroTransition]);
 
   // Autoplay — pauses when open or hovering
   useEffect(() => {
@@ -37,7 +59,13 @@ export default function Lightbox({ photos }) {
       if (!hoveringRef.current) goHero((heroIdxRef.current + 1) % n);
     }, 4000);
     return () => clearInterval(id);
-  }, [n, open]);
+  }, [n, open, goHero]);
+
+  useEffect(() => {
+    return () => {
+      if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
+    };
+  }, []);
 
   // Keyboard + body scroll lock for lightbox
   useEffect(() => {
@@ -52,7 +80,7 @@ export default function Lightbox({ photos }) {
     return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = ''; };
   }, [open, n]);
 
-  if (!n) return <div style={{ height: '80vh', background: '#e2e8f0' }} />;
+  if (!n) return <div className="gal-hero gal-empty" />;
 
   const showArrows = n > 1 && (hovering || open);
 
@@ -81,12 +109,15 @@ export default function Lightbox({ photos }) {
       >
         {/* Bottom layer: previous image stays visible while new one fades in */}
         {prevHeroIdx !== null && (
-          <img src={photos[prevHeroIdx]} alt="" className="gal-hero-img" style={{ zIndex: 1 }} />
+          <img src={photos[prevHeroIdx]} width="1600" height="1000" decoding="async" alt="" className="gal-hero-img" style={{ zIndex: 1 }} />
         )}
         {/* Top layer: current image — animated only during transitions */}
         <img
           key={heroIdx}
           src={photos[heroIdx]}
+          width="1600"
+          height="1000"
+          decoding="async"
           alt=""
           className={`gal-hero-img${transitioning ? ' gal-hero-img-in' : ''}`}
           style={{ zIndex: 2 }}
@@ -148,7 +179,7 @@ export default function Lightbox({ photos }) {
               lbTouchX.current = null;
             }}
           >
-            <img className="lb-img" src={photos[lbIdx]} alt="" />
+            <img className="lb-img" src={photos[lbIdx]} width="1600" height="1000" decoding="async" alt="" />
           </div>
 
           <div className="lb-thumbs" onClick={(e) => e.stopPropagation()}>
@@ -158,7 +189,7 @@ export default function Lightbox({ photos }) {
                 className={`lb-th${i === lbIdx ? ' active' : ''}`}
                 onClick={() => setLbIdx(i)}
               >
-                <img src={url} loading="lazy" alt="" />
+                <img src={url} width="160" height="110" loading="lazy" decoding="async" alt="" />
               </div>
             ))}
           </div>
