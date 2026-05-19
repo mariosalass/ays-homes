@@ -52,7 +52,7 @@ export default function PropertiesSection({ properties }) {
     <>
       <div className="pg-hero">
         <div className="pg-icon"><i className="fas fa-building" /></div>
-        <h1>Propiedades en Venta y Alquiler</h1>
+        <h1>Propiedades en Alquiler y/o Venta</h1>
         <p>Explorá nuestra selección de casas, apartamentos, locales, oficinas y terrenos</p>
       </div>
 

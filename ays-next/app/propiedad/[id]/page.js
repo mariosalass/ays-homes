@@ -86,7 +86,7 @@ export default async function PropiedadPage({ params }) {
         <Lightbox photos={photos} />
         {photos.length > 0 && (
           <div className="det-badge">
-            <span className={`badge ${opClass}`}>{isSaleRent ? 'Venta/Alquiler' : operation}</span>
+            <span className={`badge ${opClass}`}>{isSaleRent ? 'Alquiler y/o Venta' : operation}</span>
           </div>
         )}
         <div className="det-layout">

@@ -3,7 +3,7 @@ import PropertiesSection from '@/components/PropertiesSection';
 import { createSupabaseClient } from '@/lib/supabase';
 
 export const metadata = {
-  title: 'Propiedades en Venta y Alquiler · AyS Soluciones Comerciales',
+  title: 'Propiedades en Alquiler y/o Venta · AyS Soluciones Comerciales',
   description: 'Explorá casas, apartamentos, locales, oficinas y terrenos en Costa Rica.',
 };
 

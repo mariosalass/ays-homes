@@ -36,7 +36,7 @@ export default function PropCard({ item }) {
       <div className="pimg">
         <img src={img} width="700" height="460" loading="lazy" decoding="async" alt={item.title || ''} />
         <div className="pbadges">
-          <span className={`badge ${opClass}`}>{isSaleRent ? 'Venta/Alquiler' : operation}</span>
+          <span className={`badge ${opClass}`}>{isSaleRent ? 'Alquiler y/o Venta' : operation}</span>
           {item.featured && <span className="badge b-feat">Destacado</span>}
         </div>
         {photos.length > 1 && (
