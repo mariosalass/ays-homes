@@ -118,6 +118,13 @@ export default async function PropiedadPage({ params }) {
               </div>
             )}
 
+            {item.finance_notes && (
+              <div className="ibox">
+                <h3>Notas financieras</h3>
+                <p style={{ fontSize: '14.5px', lineHeight: 1.75 }}>{item.finance_notes}</p>
+              </div>
+            )}
+
             {item.amenidades?.length > 0 && (
               <div className="ibox">
                 <h3>Amenidades</h3>
