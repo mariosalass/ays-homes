@@ -1130,10 +1130,10 @@ function renderList(elId, items, kind){
         '</div>'+
       '</div>'+
       '<div class="lc-actions">'+
-        '<button class="lc-btn feat'+(item.featured?' active':'')+'" onclick="toggleFeatured(this,\''+item.id+'\','+!!item.featured+',\''+kind+'\')"><i class="fas fa-star"></i> '+(item.featured?'Quitar destacado':'Destacar')+'</button>'+
-        '<button class="lc-btn preview" onclick="openPreview(\''+item.id+'\',\''+kind+'\')"><i class="fas fa-eye"></i> Ver página</button>'+
-        '<button class="lc-btn edit" onclick="editItem(\''+item.id+'\',\''+kind+'\')"><i class="fas fa-pen"></i> Editar</button>'+
-        '<button class="lc-btn del" onclick="confirmDelete(\''+item.id+'\',\''+kind+'\')"><i class="fas fa-trash-can"></i> Eliminar</button>'+
+        '<button class="lc-btn feat'+(item.featured?' active':'')+'" title="'+(item.featured?'Quitar destacado':'Destacar')+'" aria-label="'+(item.featured?'Quitar destacado':'Destacar')+'" onclick="toggleFeatured(this,\''+item.id+'\','+!!item.featured+',\''+kind+'\')"><i class="fas fa-star"></i></button>'+
+        '<button class="lc-btn preview" title="Ver página" aria-label="Ver página" onclick="openPreview(\''+item.id+'\',\''+kind+'\')"><i class="fas fa-eye"></i></button>'+
+        '<button class="lc-btn edit" title="Editar" aria-label="Editar" onclick="editItem(\''+item.id+'\',\''+kind+'\')"><i class="fas fa-pen"></i></button>'+
+        '<button class="lc-btn del" title="Eliminar" aria-label="Eliminar" onclick="confirmDelete(\''+item.id+'\',\''+kind+'\')"><i class="fas fa-trash-can"></i></button>'+
         '<div class="lc-share-wrap" id="sw-'+item.id+'">'
           +'<button class="lc-btn share" onclick="toggleShareMenu(\''+item.id+'\')" title="Compartir">'
           +'<i class="fas fa-share-nodes"></i></button>'
@@ -1720,7 +1720,9 @@ async function toggleFeatured(btn, id, currentVal, kind){
   var {error} = await sb.from('listings').update({featured: !currentVal}).eq('id', id);
   if(error){ showToast('Error al actualizar','err'); return; }
   var nowFeatured = !currentVal;
-  btn.innerHTML = '<i class="fas fa-star"></i> ' + (nowFeatured ? 'Quitar destacado' : 'Destacar');
+  btn.innerHTML = '<i class="fas fa-star"></i>';
+  btn.setAttribute('title', nowFeatured ? 'Quitar destacado' : 'Destacar');
+  btn.setAttribute('aria-label', nowFeatured ? 'Quitar destacado' : 'Destacar');
   btn.classList.toggle('active', nowFeatured);
   btn.setAttribute('onclick', "toggleFeatured(this,'"+id+"',"+nowFeatured+",'"+kind+"')");
   showToast(nowFeatured ? 'Marcado como destacado ✓' : 'Quitado de destacados ✓', 'ok');
