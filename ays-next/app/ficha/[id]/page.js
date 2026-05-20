@@ -17,14 +17,74 @@ function operationType(item) {
 }
 
 function isSaleAndRent(item) {
-  return String(item.operation_type || '').trim() === 'Venta y Alquiler';
+  const ops = Array.isArray(item.available_operations)
+    ? item.available_operations.map((op) => String(op).trim())
+    : [];
+  return String(item.operation_type || '').trim() === 'Venta y Alquiler'
+    || (ops.includes('Venta') && ops.includes('Alquiler'));
+}
+
+function isDebtSale(item) {
+  return operationType(item) === 'Venta cediendo deuda';
+}
+
+function isRentOption(item) {
+  return operationType(item) === 'Alquiler con opción de compra';
+}
+
+function financialLines(item) {
+  const op = operationType(item);
+
+  if (isSaleAndRent(item)) {
+    const sale = hasValue(item.sale_price) ? item.sale_price : item.price;
+    return [
+      hasValue(sale) && { label: 'Precio de venta', value: sale },
+      hasValue(item.rent_price) && { label: 'Alquiler mensual', value: item.rent_price, suffix: '/ mes' },
+    ].filter(Boolean);
+  }
+
+  if (isDebtSale(item)) {
+    const downPayment = hasValue(item.down_payment) ? item.down_payment : item.price;
+    return [
+      hasValue(downPayment) && { label: 'Prima requerida', value: downPayment },
+      hasValue(item.debt_amount) && { label: 'Deuda a asumir', value: item.debt_amount },
+      hasValue(item.sale_price) && { label: 'Valor total', value: item.sale_price },
+    ].filter(Boolean);
+  }
+
+  if (isRentOption(item)) {
+    const rent = hasValue(item.rent_price) ? item.rent_price : item.price;
+    return [
+      hasValue(rent) && { label: 'Alquiler mensual', value: rent, suffix: '/ mes' },
+      hasValue(item.down_payment) && { label: 'Prima/opción inicial', value: item.down_payment },
+      hasValue(item.option_purchase_price) && { label: 'Precio de compra pactado', value: item.option_purchase_price },
+    ].filter(Boolean);
+  }
+
+  if (op.indexOf('Alquiler') === 0) {
+    const rent = hasValue(item.rent_price) ? item.rent_price : item.price;
+    return [
+      hasValue(rent) && { label: 'Alquiler mensual', value: rent, suffix: '/ mes' },
+    ].filter(Boolean);
+  }
+
+  const sale = hasValue(item.sale_price) ? item.sale_price : item.price;
+  return [
+    hasValue(sale) && { label: 'Precio de venta', value: sale },
+  ].filter(Boolean);
+}
+
+function financialSummary(item) {
+  const cur = item.currency || '$';
+  const lines = financialLines(item);
+  return lines.map((line) => `${line.label}: ${cur}${fmtPrice(line.value)}${line.suffix ? ' ' + line.suffix : ''}`).join(' · ');
 }
 
 export async function generateMetadata({ params, searchParams }) {
   const mode = searchParams?.mode || 'client';
   const isBroker = mode === 'broker';
   const sb = createSupabaseClient();
-  const { data: item } = await sb.from('listings').select('title,description,photos,prop_type,operation,operation_type,location,currency,price,sale_price,rent_price,kind,brand,year').eq('id', params.id).single();
+  const { data: item } = await sb.from('listings').select('title,description,photos,prop_type,operation,operation_type,available_operations,location,currency,price,sale_price,rent_price,debt_amount,down_payment,option_purchase_price,finance_notes,kind,brand,year').eq('id', params.id).single();
   if (!item) return { title: 'Ficha Técnica' };
 
   console.log('[og:image debug] ficha', params.id, '| campos:', Object.keys(item), '| photos:', item.photos);
@@ -34,9 +94,10 @@ export async function generateMetadata({ params, searchParams }) {
   const suffix = isBroker ? '· Ficha Técnica' : '· AyS Soluciones Comerciales';
   const title = `${item.title} ${suffix}`;
   const op = operationType(item);
+  const financeText = isProperty ? financialSummary(item) : '';
   const desc = (item.description || '').slice(0, 155)
     || (isProperty
-      ? `${item.prop_type || 'Propiedad'} en ${op || 'venta'} en ${item.location || 'Costa Rica'}. Precio: ${item.currency || '$'}${fmtPrice(item.price)}`
+      ? `${item.prop_type || 'Propiedad'} en ${op || 'venta'} en ${item.location || 'Costa Rica'}. ${financeText || `Precio: ${item.currency || '$'}${fmtPrice(item.price)}`}`
       : `${item.brand || 'Auto'} ${item.year || ''} en venta. Precio: ${item.currency || '$'}${fmtPrice(item.price)}`);
   const img = item.photos?.[0] || '';
 
@@ -59,9 +120,8 @@ export default async function FichaPage({ params, searchParams }) {
   const photos = item.photos || [];
   const isProperty = item.kind === 'property';
   const operation = operationType(item);
-  const isSaleRent = isProperty && isSaleAndRent(item);
-  const salePrice = hasValue(item.sale_price) ? item.sale_price : item.price;
-  const rentPrice = item.rent_price;
+  const financeRows = isProperty ? financialLines(item) : [];
+  const financeNotes = isProperty && hasValue(item.finance_notes) ? String(item.finance_notes).trim() : '';
   const WA_NUMBER = '50685725465';
   const waMsg = encodeURIComponent(`Hola, me interesa esta publicación: ${item.title}`);
 
@@ -101,16 +161,28 @@ export default async function FichaPage({ params, searchParams }) {
           </p>
         )}
 
-        {isSaleRent ? (
+        {isProperty && financeRows.length > 0 ? (
           <div style={{ fontSize: 'clamp(1.5rem,5vw,2rem)', fontWeight: 800, color: '#1b5e6e', marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {hasValue(salePrice) && <div>Venta: {item.currency || '$'}{fmtPrice(salePrice)}</div>}
-            {hasValue(rentPrice) && <div>Alquiler: {item.currency || '$'}{fmtPrice(rentPrice)} <span style={{ fontSize: 15, fontWeight: 400, color: '#64748b' }}>/mes</span></div>}
+            {financeRows.map((row) => (
+              <div key={row.label}>
+                <span style={{ fontSize: 15, fontWeight: 600, color: '#64748b' }}>{row.label}: </span>
+                {item.currency || '$'}{fmtPrice(row.value)}
+                {row.suffix && <span style={{ fontSize: 15, fontWeight: 400, color: '#64748b' }}> {row.suffix}</span>}
+              </div>
+            ))}
           </div>
         ) : (
           <p style={{ fontSize: 'clamp(1.5rem,5vw,2rem)', fontWeight: 800, color: '#1b5e6e', marginBottom: 20 }}>
             {item.currency || '$'}{fmtPrice(item.price)}
             {isProperty && operation.indexOf('Alquiler') === 0 && <span style={{ fontSize: 15, fontWeight: 400, color: '#64748b' }}>/mes</span>}
           </p>
+        )}
+
+        {financeNotes && (
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '1.2rem', marginBottom: 16 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Notas financieras</h3>
+            <p style={{ fontSize: 14, color: '#1b5e6e', lineHeight: 1.75 }}>{financeNotes}</p>
+          </div>
         )}
 
         {/* Specs */}
