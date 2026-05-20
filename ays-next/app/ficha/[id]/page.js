@@ -1,3 +1,6 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { notFound } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabase';
 import Lightbox from '@/components/Lightbox';
@@ -80,16 +83,23 @@ function financialSummary(item) {
   return lines.map((line) => `${line.label}: ${cur}${fmtPrice(line.value)}${line.suffix ? ' ' + line.suffix : ''}`).join(' · ');
 }
 
+function typeLabel(item) {
+  if (item.kind === 'property') return item.prop_type || 'Propiedad';
+  if (item.kind === 'business') return `${item.sector || 'Negocio'}${item.business_type ? ' · ' + item.business_type : ''}`;
+  return `${item.brand || 'Auto'}${item.year ? ' · ' + item.year : ''}`;
+}
+
 export async function generateMetadata({ params, searchParams }) {
   const mode = searchParams?.mode || 'client';
   const isBroker = mode === 'broker';
   const sb = createSupabaseClient();
-  const { data: item } = await sb.from('listings').select('title,description,photos,prop_type,operation,operation_type,available_operations,location,currency,price,sale_price,rent_price,debt_amount,down_payment,option_purchase_price,finance_notes,kind,brand,year').eq('id', params.id).single();
+  const { data: item } = await sb.from('listings').select('title,description,photos,prop_type,operation,operation_type,available_operations,location,currency,price,sale_price,rent_price,debt_amount,down_payment,option_purchase_price,finance_notes,kind,brand,year,sector,business_type,income_approx,sale_reason,includes,provincia,canton,distrito').eq('id', params.id).single();
   if (!item) return { title: 'Ficha Técnica' };
 
   console.log('[og:image debug] ficha', params.id, '| campos:', Object.keys(item), '| photos:', item.photos);
 
   const isProperty = item.kind === 'property';
+  const isBusiness = item.kind === 'business';
   const siteName = isBroker ? 'Ficha Técnica' : 'AyS Soluciones Comerciales';
   const suffix = isBroker ? '· Ficha Técnica' : '· AyS Soluciones Comerciales';
   const title = `${item.title} ${suffix}`;
@@ -98,6 +108,8 @@ export async function generateMetadata({ params, searchParams }) {
   const desc = (item.description || '').slice(0, 155)
     || (isProperty
       ? `${item.prop_type || 'Propiedad'} en ${op || 'venta'} en ${item.location || 'Costa Rica'}. ${financeText || `Precio: ${item.currency || '$'}${fmtPrice(item.price)}`}`
+      : isBusiness
+      ? `${typeLabel(item)} en ${op || 'venta'}${item.location ? ' en ' + item.location : ''}. Precio: ${item.currency || '$'}${fmtPrice(item.price)}`
       : `${item.brand || 'Auto'} ${item.year || ''} en venta. Precio: ${item.currency || '$'}${fmtPrice(item.price)}`);
   const img = item.photos?.[0] || '';
 
@@ -119,9 +131,19 @@ export default async function FichaPage({ params, searchParams }) {
 
   const photos = item.photos || [];
   const isProperty = item.kind === 'property';
+  const isBusiness = item.kind === 'business';
+  const isCar = item.kind === 'car';
   const operation = operationType(item);
   const financeRows = isProperty ? financialLines(item) : [];
   const financeNotes = isProperty && hasValue(item.finance_notes) ? String(item.finance_notes).trim() : '';
+  const businessInfoRows = isBusiness ? [
+    { label: 'Sector', value: item.sector, icon: 'fas fa-store' },
+    { label: 'Tipo de negocio', value: item.business_type, icon: 'fas fa-briefcase' },
+    { label: 'Ingresos aprox.', value: item.income_approx, icon: 'fas fa-chart-line' },
+    { label: 'Tipo de operación', value: item.operation, icon: 'fas fa-handshake' },
+  ].filter((row) => hasValue(row.value)) : [];
+  const businessIncludes = isBusiness && hasValue(item.includes) ? String(item.includes).trim() : '';
+  const businessSaleReason = isBusiness && hasValue(item.sale_reason) ? String(item.sale_reason).trim() : '';
   const WA_NUMBER = '50685725465';
   const waMsg = encodeURIComponent(`Hola, me interesa esta publicación: ${item.title}`);
 
@@ -150,8 +172,9 @@ export default async function FichaPage({ params, searchParams }) {
       {/* Body */}
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '1.5rem 1.2rem 3rem' }}>
         <p style={{ fontSize: 12, color: '#c08b2f', fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>
-          {isProperty ? (item.prop_type || 'Propiedad') : `${item.brand || 'Auto'}${item.year ? ' · ' + item.year : ''}`}
+          {typeLabel(item)}
           {isProperty && operation ? ' · ' + operation : ''}
+          {isBusiness && item.operation ? ' · ' + item.operation : ''}
         </p>
         <h1 style={{ fontSize: 'clamp(1.5rem,5vw,2rem)', fontWeight: 800, marginBottom: 8, letterSpacing: '-.02em' }}>{item.title}</h1>
 
@@ -186,24 +209,37 @@ export default async function FichaPage({ params, searchParams }) {
         )}
 
         {/* Specs */}
-        {isProperty
-          ? (item.beds || item.baths || item.area || item.parking) && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '1rem 1.2rem', marginBottom: 16 }}>
-              {item.beds && <span style={{ fontSize: 14, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}><i className="fas fa-bed" style={{ color: '#1b5e6e' }} /> {item.beds} hab.</span>}
-              {item.baths && <span style={{ fontSize: 14, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}><i className="fas fa-bath" style={{ color: '#1b5e6e' }} /> {item.baths} baños</span>}
-              {item.area && <span style={{ fontSize: 14, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}><i className="fas fa-expand-arrows-alt" style={{ color: '#1b5e6e' }} /> {item.area} m²</span>}
-              {item.parking && <span style={{ fontSize: 14, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}><i className="fas fa-car" style={{ color: '#1b5e6e' }} /> {item.parking} parq.</span>}
+        {isProperty && (item.beds || item.baths || item.area || item.parking) && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '1rem 1.2rem', marginBottom: 16 }}>
+            {item.beds && <span style={{ fontSize: 14, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}><i className="fas fa-bed" style={{ color: '#1b5e6e' }} /> {item.beds} hab.</span>}
+            {item.baths && <span style={{ fontSize: 14, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}><i className="fas fa-bath" style={{ color: '#1b5e6e' }} /> {item.baths} baños</span>}
+            {item.area && <span style={{ fontSize: 14, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}><i className="fas fa-expand-arrows-alt" style={{ color: '#1b5e6e' }} /> {item.area} m²</span>}
+            {item.parking && <span style={{ fontSize: 14, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}><i className="fas fa-car" style={{ color: '#1b5e6e' }} /> {item.parking} parq.</span>}
+          </div>
+        )}
+
+        {isCar && (item.km || item.transmission || item.fuel || item.color) && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '1rem 1.2rem', marginBottom: 16 }}>
+            {item.km && <span style={{ fontSize: 14, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}><i className="fas fa-tachometer-alt" style={{ color: '#1b5e6e' }} /> {item.km}</span>}
+            {item.transmission && <span style={{ fontSize: 14, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}><i className="fas fa-cog" style={{ color: '#1b5e6e' }} /> {item.transmission}</span>}
+            {item.fuel && <span style={{ fontSize: 14, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}><i className="fas fa-gas-pump" style={{ color: '#1b5e6e' }} /> {item.fuel}</span>}
+            {item.color && <span style={{ fontSize: 14, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}><i className="fas fa-palette" style={{ color: '#1b5e6e' }} /> {item.color}</span>}
+          </div>
+        )}
+
+        {isBusiness && businessInfoRows.length > 0 && (
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '1.2rem', marginBottom: 16 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 10 }}>Información del negocio</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              {businessInfoRows.map((row) => (
+                <div key={row.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 14 }}>
+                  <i className={row.icon} style={{ color: '#1b5e6e', fontSize: 13, marginTop: 3 }} />
+                  <span><strong>{row.label}:</strong> {row.value}</span>
+                </div>
+              ))}
             </div>
-          )
-          : (item.km || item.transmission || item.fuel || item.color) && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '1rem 1.2rem', marginBottom: 16 }}>
-              {item.km && <span style={{ fontSize: 14, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}><i className="fas fa-tachometer-alt" style={{ color: '#1b5e6e' }} /> {item.km}</span>}
-              {item.transmission && <span style={{ fontSize: 14, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}><i className="fas fa-cog" style={{ color: '#1b5e6e' }} /> {item.transmission}</span>}
-              {item.fuel && <span style={{ fontSize: 14, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}><i className="fas fa-gas-pump" style={{ color: '#1b5e6e' }} /> {item.fuel}</span>}
-              {item.color && <span style={{ fontSize: 14, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}><i className="fas fa-palette" style={{ color: '#1b5e6e' }} /> {item.color}</span>}
-            </div>
-          )
-        }
+          </div>
+        )}
 
         {item.description && (
           <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '1.2rem', marginBottom: 16 }}>
@@ -212,9 +248,23 @@ export default async function FichaPage({ params, searchParams }) {
           </div>
         )}
 
+        {businessIncludes && (
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '1.2rem', marginBottom: 16 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Qué incluye la venta</h3>
+            <p style={{ fontSize: 14, color: '#1b5e6e', lineHeight: 1.75 }}>{businessIncludes}</p>
+          </div>
+        )}
+
+        {businessSaleReason && (
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '1.2rem', marginBottom: 16 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Motivo de venta</h3>
+            <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.75 }}>{businessSaleReason}</p>
+          </div>
+        )}
+
         {item.amenidades?.length > 0 && (
           <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '1.2rem', marginBottom: 16 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 10 }}>{isProperty ? 'Amenidades' : 'Extras y equipamiento'}</h3>
+            <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 10 }}>{isProperty ? 'Amenidades' : isBusiness ? 'Extras' : 'Extras y equipamiento'}</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               {item.amenidades.map((a) => (
                 <div key={a} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14 }}>
