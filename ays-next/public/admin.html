@@ -781,9 +781,9 @@ img{display:block;max-width:100%}
       <p class="mf-hint">Escribí y tocá + para agregar. Tocá la x para quitar.</p>
     </div>
     <div class="mf">
-      <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-        <input type="checkbox" id="f-featured" style="display:none">
-        <div id="featured-toggle" onclick="toggleFeaturedCheck()" style="width:44px;height:24px;border-radius:12px;background:#e2e8f0;position:relative;transition:background .2s;cursor:pointer;flex-shrink:0">
+      <label for="f-featured" style="display:flex;align-items:center;gap:10px;cursor:pointer">
+        <input type="checkbox" id="f-featured" onchange="syncFeaturedToggle(this.checked)" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none">
+        <div id="featured-toggle" style="width:44px;height:24px;border-radius:12px;background:#e2e8f0;position:relative;transition:background .2s;cursor:pointer;flex-shrink:0">
           <div id="featured-knob" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)"></div>
         </div>
         Marcar como destacado
@@ -1622,16 +1622,14 @@ function closeConfirm(){
 
 // ── FEATURED CHECKBOX TOGGLE ──
 function syncFeaturedToggle(checked){
+  if(checked === undefined){
+    checked = document.getElementById('f-featured').checked;
+  }
   var toggle = document.getElementById('featured-toggle');
   var knob   = document.getElementById('featured-knob');
   if(!toggle || !knob) return;
   toggle.style.background  = checked ? 'var(--gold)' : '#e2e8f0';
   knob.style.transform     = checked ? 'translateX(20px)' : 'translateX(0)';
-}
-function toggleFeaturedCheck(){
-  var cb = document.getElementById('f-featured');
-  cb.checked = !cb.checked;
-  syncFeaturedToggle(cb.checked);
 }
 
 // ── TOGGLE FEATURED ──
