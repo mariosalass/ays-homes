@@ -168,6 +168,7 @@ img{display:block;max-width:100%}
 .lc-btn.del:hover{background:var(--red-l)}
 .lc-btn.feat{color:var(--gold)}
 .lc-btn.feat:hover{background:var(--gold-l)}
+.lc-btn.feat.active{background:var(--gold-l);color:var(--gold)}
 .lc-share-wrap{position:relative;flex-shrink:0}
 .lc-btn.share{color:#0ea5e9;border-left:1px solid var(--border);padding:11px 14px;flex:none}
 .lc-btn.share:hover{background:#f0f9ff}
@@ -503,23 +504,8 @@ img{display:block;max-width:100%}
       <label>Título <span>*</span></label>
       <input type="text" id="f-title" placeholder="Ej: Casa moderna en Escazú">
     </div>
-    <div class="mf-row" id="price-common-row">
-      <div class="mf" id="price-field">
-        <label id="f-price-label">Precio <span>*</span></label>
-        <input type="text" id="f-price" placeholder="Ej: 250000">
-        <p class="mf-hint" id="f-price-hint" style="display:none">Se calcula automáticamente según la operación.</p>
-      </div>
-      <div class="mf">
-        <label>Moneda / período</label>
-        <select id="f-currency">
-          <option value="$">$ (dólares)</option>
-          <option value="₡">₡ (colones)</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Campos propiedad -->
-    <div id="fields-property">
+    <!-- Tipo y operación — solo propiedad, aparece antes del precio -->
+    <div id="prop-type-fields" style="display:none">
       <div class="mf-row">
         <div class="mf">
           <label>Tipo <span>*</span></label>
@@ -544,6 +530,25 @@ img{display:block;max-width:100%}
           </select>
         </div>
       </div>
+    </div>
+
+    <div class="mf-row" id="price-common-row">
+      <div class="mf">
+        <label>Moneda / período</label>
+        <select id="f-currency">
+          <option value="$">$ (dólares)</option>
+          <option value="₡">₡ (colones)</option>
+        </select>
+      </div>
+      <div class="mf" id="price-field">
+        <label id="f-price-label">Precio <span>*</span></label>
+        <input type="text" id="f-price" placeholder="Ej: 250000">
+        <p class="mf-hint" id="f-price-hint" style="display:none">Se calcula automáticamente según la operación.</p>
+      </div>
+    </div>
+
+    <!-- Campos propiedad -->
+    <div id="fields-property">
       <div id="property-finance-fields">
         <div class="mf-row" id="finance-primary-row">
           <div class="mf" id="field-sale-price">
@@ -555,6 +560,11 @@ img{display:block;max-width:100%}
             <input type="text" id="f-rent-price" placeholder="Ej: 1200" oninput="updateDerivedPropertyPrice()">
           </div>
         </div>
+        <div class="mf" id="field-finance-notes">
+          <label>Notas financieras</label>
+          <textarea id="f-finance-notes" placeholder="Ej: cuota aproximada, prima negociable, banco, mantenimiento..."></textarea>
+        </div>
+        <div id="property-price-slot"></div>
         <div class="mf-row" id="finance-secondary-row">
           <div class="mf" id="field-debt-amount">
             <label>Deuda a asumir</label>
@@ -569,11 +579,6 @@ img{display:block;max-width:100%}
           <label>Precio de compra pactado</label>
           <input type="text" id="f-option-purchase-price" placeholder="Ej: 180000">
         </div>
-        <div class="mf" id="field-finance-notes">
-          <label>Notas financieras</label>
-          <textarea id="f-finance-notes" placeholder="Ej: cuota aproximada, prima negociable, banco, mantenimiento..."></textarea>
-        </div>
-        <div id="property-price-slot"></div>
       </div>
       <div class="mf-row">
         <div class="mf">
@@ -1048,7 +1053,7 @@ function renderList(elId, items, kind){
         '</div>'+
       '</div>'+
       '<div class="lc-actions">'+
-        '<button class="lc-btn feat" onclick="toggleFeatured(\''+item.id+'\','+!!item.featured+',\''+kind+'\')"><i class="fas fa-star"></i> '+(item.featured?'Quitar destacado':'Destacar')+'</button>'+
+        '<button class="lc-btn feat'+(item.featured?' active':'')+'" onclick="toggleFeatured(this,\''+item.id+'\','+!!item.featured+',\''+kind+'\')"><i class="fas fa-star"></i> '+(item.featured?'Quitar destacado':'Destacar')+'</button>'+
         '<button class="lc-btn edit" onclick="editItem(\''+item.id+'\',\''+kind+'\')"><i class="fas fa-pen"></i> Editar</button>'+
         '<button class="lc-btn del" onclick="confirmDelete(\''+item.id+'\',\''+kind+'\')"><i class="fas fa-trash-can"></i> Eliminar</button>'+
         '<div class="lc-share-wrap" id="sw-'+item.id+'">'
@@ -1103,9 +1108,10 @@ function openModal(type, itemId){
   amenidades = [];
   resetForm();
 
-  document.getElementById('fields-property').style.display = type==='property' ? 'block' : 'none';
-  document.getElementById('fields-car').style.display      = type==='car'      ? 'block' : 'none';
-  document.getElementById('fields-business').style.display = type==='business' ? 'block' : 'none';
+  document.getElementById('prop-type-fields').style.display = type==='property' ? 'block' : 'none';
+  document.getElementById('fields-property').style.display  = type==='property' ? 'block' : 'none';
+  document.getElementById('fields-car').style.display       = type==='car'      ? 'block' : 'none';
+  document.getElementById('fields-business').style.display  = type==='business' ? 'block' : 'none';
   updatePriceFieldMode(type);
   if(type === 'property'){
     initLocationSelects();
@@ -1568,11 +1574,15 @@ function closeConfirm(){
 }
 
 // ── TOGGLE FEATURED ──
-async function toggleFeatured(id, currentVal, kind){
+async function toggleFeatured(btn, id, currentVal, kind){
   if(!sb){ showToast('Supabase no configurado','err'); return; }
   var {error} = await sb.from('listings').update({featured: !currentVal}).eq('id', id);
   if(error){ showToast('Error al actualizar','err'); return; }
-  showToast(!currentVal ? 'Marcado como destacado ✓' : 'Quitado de destacados ✓', 'ok');
+  var nowFeatured = !currentVal;
+  btn.innerHTML = '<i class="fas fa-star"></i> ' + (nowFeatured ? 'Quitar destacado' : 'Destacar');
+  btn.classList.toggle('active', nowFeatured);
+  btn.setAttribute('onclick', "toggleFeatured(this,'"+id+"',"+nowFeatured+",'"+kind+"')");
+  showToast(nowFeatured ? 'Marcado como destacado ✓' : 'Quitado de destacados ✓', 'ok');
   if(kind==='property') await loadProps();
   else if(kind==='business') await loadBiz();
   else await loadCars();
