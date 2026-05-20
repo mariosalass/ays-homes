@@ -560,11 +560,6 @@ img{display:block;max-width:100%}
             <input type="text" id="f-rent-price" placeholder="Ej: 1200" oninput="updateDerivedPropertyPrice()">
           </div>
         </div>
-        <div class="mf" id="field-finance-notes">
-          <label>Notas financieras</label>
-          <textarea id="f-finance-notes" placeholder="Ej: cuota aproximada, prima negociable, banco, mantenimiento..."></textarea>
-        </div>
-        <div id="property-price-slot"></div>
         <div class="mf-row" id="finance-secondary-row">
           <div class="mf" id="field-debt-amount">
             <label>Deuda a asumir</label>
@@ -578,6 +573,11 @@ img{display:block;max-width:100%}
         <div class="mf" id="field-option-purchase-price">
           <label>Precio de compra pactado</label>
           <input type="text" id="f-option-purchase-price" placeholder="Ej: 180000">
+        </div>
+        <div id="property-price-slot"></div>
+        <div class="mf" id="field-finance-notes">
+          <label>Notas financieras</label>
+          <textarea id="f-finance-notes" placeholder="Ej: cuota aproximada, prima negociable, banco, mantenimiento..."></textarea>
         </div>
       </div>
       <div class="mf-row">
@@ -752,8 +752,11 @@ img{display:block;max-width:100%}
     </div>
     <div class="mf">
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-        <input type="checkbox" id="f-featured" style="width:18px;height:18px;accent-color:var(--gold)">
-        Marcar como <strong>destacado</strong>
+        <input type="checkbox" id="f-featured" style="display:none">
+        <div id="featured-toggle" onclick="toggleFeaturedCheck()" style="width:44px;height:24px;border-radius:12px;background:#e2e8f0;position:relative;transition:background .2s;cursor:pointer;flex-shrink:0">
+          <div id="featured-knob" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)"></div>
+        </div>
+        Marcar como destacado
       </label>
     </div>
 
@@ -1158,6 +1161,7 @@ function resetForm(){
   document.getElementById('f-car-trans').value = 'Automática';
   document.getElementById('f-car-fuel').value = 'Gasolina';
   document.getElementById('f-featured').checked = false;
+  syncFeaturedToggle(false);
   document.getElementById('photos-preview').innerHTML = '';
   document.getElementById('upload-progress').classList.remove('show');
   renderAmenidades();
@@ -1179,6 +1183,7 @@ function populateForm(item, type){
   document.getElementById('f-currency').value = item.currency||'$';
   document.getElementById('f-desc').value = item.description||'';
   document.getElementById('f-featured').checked = !!item.featured;
+  syncFeaturedToggle(!!item.featured);
   amenidades = item.amenidades||[];
   renderAmenidades();
 
@@ -1571,6 +1576,20 @@ function confirmDelete(id, type){
 }
 function closeConfirm(){
   document.getElementById('confirm-overlay').classList.remove('open');
+}
+
+// ── FEATURED CHECKBOX TOGGLE ──
+function syncFeaturedToggle(checked){
+  var toggle = document.getElementById('featured-toggle');
+  var knob   = document.getElementById('featured-knob');
+  if(!toggle || !knob) return;
+  toggle.style.background  = checked ? 'var(--gold)' : '#e2e8f0';
+  knob.style.transform     = checked ? 'translateX(20px)' : 'translateX(0)';
+}
+function toggleFeaturedCheck(){
+  var cb = document.getElementById('f-featured');
+  cb.checked = !cb.checked;
+  syncFeaturedToggle(cb.checked);
 }
 
 // ── TOGGLE FEATURED ──
