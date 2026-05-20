@@ -238,6 +238,11 @@ img{display:block;max-width:100%}
 }
 .mf textarea{resize:vertical;min-height:90px;line-height:1.5}
 .mf-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#finance-fields-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#finance-fields-grid .fprimary{grid-column:2;grid-row:1}
+#finance-fields-grid .fsec-full{grid-column:1/-1}
+#finance-fields-grid .fsec-left{grid-column:1}
+#finance-fields-grid .fsec-right{grid-column:2}
 .mf-hint{font-size:12px;color:var(--muted);margin-top:5px}
 
 /* ── PHOTO UPLOAD ── */
@@ -532,49 +537,48 @@ img{display:block;max-width:100%}
       </div>
     </div>
 
-    <div class="mf-row" id="price-common-row">
-      <div class="mf">
-        <label>Moneda / período</label>
-        <select id="f-currency">
-          <option value="$">$ (dólares)</option>
-          <option value="₡">₡ (colones)</option>
-        </select>
-      </div>
-      <div class="mf" id="price-field">
-        <label id="f-price-label">Precio <span>*</span></label>
-        <input type="text" id="f-price" placeholder="Ej: 250000">
-        <p class="mf-hint" id="f-price-hint" style="display:none">Se calcula automáticamente según la operación.</p>
-      </div>
-    </div>
-
     <!-- Campos propiedad -->
     <div id="fields-property">
       <div id="property-finance-fields">
-        <div class="mf-row" id="finance-primary-row">
-          <div class="mf" id="field-sale-price">
+        <div id="finance-fields-grid">
+          <!-- Col 1 fija: moneda -->
+          <div class="mf">
+            <label>Moneda / período</label>
+            <select id="f-currency">
+              <option value="$">$ (dólares)</option>
+              <option value="₡">₡ (colones)</option>
+            </select>
+          </div>
+          <!-- Col 2 / fila 1: precio principal según operación (posicionado por JS) -->
+          <div class="mf fprimary" id="field-sale-price" style="display:none">
             <label id="label-sale-price">Precio de venta</label>
             <input type="text" id="f-sale-price" placeholder="Ej: 180000" oninput="updateDerivedPropertyPrice()">
           </div>
-          <div class="mf" id="field-rent-price">
+          <div class="mf fprimary" id="field-rent-price" style="display:none">
             <label>Alquiler mensual</label>
             <input type="text" id="f-rent-price" placeholder="Ej: 1200" oninput="updateDerivedPropertyPrice()">
           </div>
-        </div>
-        <div class="mf-row" id="finance-secondary-row">
-          <div class="mf" id="field-debt-amount">
+          <!-- Campos secundarios: fila 2, posicionados por JS -->
+          <div class="mf" id="field-debt-amount" style="display:none">
             <label>Deuda a asumir</label>
             <input type="text" id="f-debt-amount" placeholder="Ej: 120000">
           </div>
-          <div class="mf" id="field-down-payment">
+          <div class="mf" id="field-down-payment" style="display:none">
             <label id="label-down-payment">Prima requerida</label>
             <input type="text" id="f-down-payment" placeholder="Ej: 60000" oninput="updateDerivedPropertyPrice()">
           </div>
+          <div class="mf" id="field-option-purchase-price" style="display:none">
+            <label>Precio de compra pactado</label>
+            <input type="text" id="f-option-purchase-price" placeholder="Ej: 180000">
+          </div>
         </div>
-        <div class="mf" id="field-option-purchase-price">
-          <label>Precio de compra pactado</label>
-          <input type="text" id="f-option-purchase-price" placeholder="Ej: 180000">
+        <!-- Precio principal (referencia) — ancho completo, debajo del grid -->
+        <div class="mf" id="price-field">
+          <label id="f-price-label">Precio principal (referencia)</label>
+          <input type="text" id="f-price" placeholder="Se calcula según operación" readonly>
+          <p class="mf-hint" id="f-price-hint">Se calcula automáticamente según la operación.</p>
         </div>
-        <div id="property-price-slot"></div>
+        <!-- Notas financieras — ancho completo -->
         <div class="mf" id="field-finance-notes">
           <label>Notas financieras</label>
           <textarea id="f-finance-notes" placeholder="Ej: cuota aproximada, prima negociable, banco, mantenimiento..."></textarea>
@@ -635,6 +639,19 @@ img{display:block;max-width:100%}
     <div id="fields-car" style="display:none">
       <div class="mf-row">
         <div class="mf">
+          <label>Moneda</label>
+          <select id="f-car-currency">
+            <option value="$">$ (dólares)</option>
+            <option value="₡">₡ (colones)</option>
+          </select>
+        </div>
+        <div class="mf">
+          <label>Precio <span>*</span></label>
+          <input type="text" id="f-car-price" placeholder="Ej: 12000">
+        </div>
+      </div>
+      <div class="mf-row">
+        <div class="mf">
           <label>Marca <span>*</span></label>
           <input type="text" id="f-car-brand" placeholder="Ej: Toyota">
         </div>
@@ -681,6 +698,19 @@ img{display:block;max-width:100%}
 
     <!-- Campos negocio -->
     <div id="fields-business" style="display:none">
+      <div class="mf-row">
+        <div class="mf">
+          <label>Moneda</label>
+          <select id="f-biz-currency">
+            <option value="$">$ (dólares)</option>
+            <option value="₡">₡ (colones)</option>
+          </select>
+        </div>
+        <div class="mf">
+          <label>Precio <span>*</span></label>
+          <input type="text" id="f-biz-price" placeholder="Ej: 50000">
+        </div>
+      </div>
       <div class="mf-row">
         <div class="mf">
           <label>Sector</label>
@@ -1148,12 +1178,14 @@ function handleOverlayClick(e){
 function resetForm(){
   ['f-title','f-price','f-desc','f-beds','f-baths','f-parking','f-area',
    'f-sale-price','f-rent-price','f-debt-amount','f-down-payment','f-option-purchase-price','f-finance-notes',
-   'f-car-brand','f-car-year','f-car-km','f-car-color','f-car-engine',
-   'f-biz-type','f-biz-income','f-biz-reason','f-biz-includes'].forEach(function(id){
+   'f-car-price','f-car-brand','f-car-year','f-car-km','f-car-color','f-car-engine',
+   'f-biz-price','f-biz-type','f-biz-income','f-biz-reason','f-biz-includes'].forEach(function(id){
     var el = document.getElementById(id);
     if(el) el.value = '';
   });
   document.getElementById('f-currency').value = '$';
+  var _cc = document.getElementById('f-car-currency'); if(_cc) _cc.value = '$';
+  var _bc = document.getElementById('f-biz-currency'); if(_bc) _bc.value = '$';
   document.getElementById('f-prop-type').value = 'Casa';
   document.getElementById('f-operation-type').value = 'Venta';
   updatePriceFieldMode(currentType);
@@ -1179,8 +1211,16 @@ function resetForm(){
 
 function populateForm(item, type){
   document.getElementById('f-title').value = item.title||'';
-  document.getElementById('f-price').value = item.price||'';
-  document.getElementById('f-currency').value = item.currency||'$';
+  if(type === 'car'){
+    document.getElementById('f-car-price').value = item.price||'';
+    document.getElementById('f-car-currency').value = item.currency||'$';
+  } else if(type === 'business'){
+    document.getElementById('f-biz-price').value = item.price||'';
+    document.getElementById('f-biz-currency').value = item.currency||'$';
+  } else {
+    document.getElementById('f-price').value = item.price||'';
+    document.getElementById('f-currency').value = item.currency||'$';
+  }
   document.getElementById('f-desc').value = item.description||'';
   document.getElementById('f-featured').checked = !!item.featured;
   syncFeaturedToggle(!!item.featured);
@@ -1464,11 +1504,13 @@ async function saveItem(){
     var title = document.getElementById('f-title').value.trim();
     if(!title) { showToast('El título es obligatorio.','err'); btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Guardar'; return; }
 
+    var _priceId    = currentType === 'car' ? 'f-car-price'    : currentType === 'business' ? 'f-biz-price'    : 'f-price';
+    var _currencyId = currentType === 'car' ? 'f-car-currency' : currentType === 'business' ? 'f-biz-currency' : 'f-currency';
     var row = {
       kind: currentType,
       title: title,
-      price: document.getElementById('f-price').value.trim(),
-      currency: document.getElementById('f-currency').value,
+      price: document.getElementById(_priceId).value.trim(),
+      currency: document.getElementById(_currencyId).value,
       description: document.getElementById('f-desc').value.trim(),
       featured: document.getElementById('f-featured').checked,
       amenidades: amenidades,
@@ -1730,45 +1772,72 @@ function movePriceField(type){
   }
 }
 function updatePriceFieldMode(type){
-  var lbl = document.getElementById('f-price-label');
+  // f-price is inside fields-property (property-only); cars/businesses use their own price fields
+  if(type !== 'property') return;
   var inp = document.getElementById('f-price');
-  var hint = document.getElementById('f-price-hint');
-  movePriceField(type);
-  if(!lbl || !inp) return;
-  if(type === 'property'){
-    lbl.innerHTML = 'Precio principal (referencia) <span>*</span>';
-    inp.placeholder = 'Se calcula según operación';
-    inp.readOnly = true;
-    showEl('price-field', true);
-    if(hint) hint.style.display = 'block';
-  } else {
-    lbl.innerHTML = 'Precio <span>*</span>';
-    inp.placeholder = 'Ej: 250000';
-    inp.readOnly = false;
-    showEl('price-field', true);
-    if(hint) hint.style.display = 'none';
-  }
+  if(inp){ inp.readOnly = true; inp.placeholder = 'Se calcula según operación'; }
 }
 function updatePropertyFinanceFields(){
   var isProperty = currentType === 'property';
   showEl('property-finance-fields', isProperty);
   if(!isProperty) return;
   var op = getSelectedPropertyOperation();
-  var showSale = op === 'Venta' || op === 'Venta y Alquiler' || op === 'Venta cediendo deuda';
-  var showRent = op === 'Alquiler' || op === 'Venta y Alquiler' || op === 'Alquiler con opción de compra';
-  var showDebt = op === 'Venta cediendo deuda';
-  var showDown = op === 'Venta cediendo deuda' || op === 'Alquiler con opción de compra';
-  var showOption = op === 'Alquiler con opción de compra';
-  showEl('price-field', op !== 'Venta y Alquiler');
-  document.getElementById('label-sale-price').textContent = op === 'Venta cediendo deuda' ? 'Valor total de la propiedad' : 'Precio de venta';
-  document.getElementById('label-down-payment').textContent = op === 'Alquiler con opción de compra' ? 'Prima/opción inicial' : 'Prima requerida';
-  showEl('field-sale-price', showSale);
-  showEl('field-rent-price', showRent);
-  showEl('field-debt-amount', showDebt);
-  showEl('field-down-payment', showDown);
-  showEl('field-option-purchase-price', showOption);
-  showEl('finance-primary-row', showSale || showRent);
-  showEl('finance-secondary-row', showDebt || showDown);
+
+  document.getElementById('label-sale-price').textContent =
+    op === 'Venta cediendo deuda' ? 'Valor total de la propiedad' : 'Precio de venta';
+  document.getElementById('label-down-payment').textContent =
+    op === 'Alquiler con opción de compra' ? 'Prima/opción inicial' : 'Prima requerida';
+
+  function pos(id, show, cls){
+    var el = document.getElementById(id);
+    if(!el) return;
+    el.style.display = show ? '' : 'none';
+    el.classList.remove('fprimary','fsec-full','fsec-left','fsec-right');
+    if(show && cls) el.classList.add(cls);
+  }
+
+  // Venta: [Moneda][Precio de venta]
+  if(op === 'Venta'){
+    pos('field-sale-price',          true,  'fprimary');
+    pos('field-rent-price',          false);
+    pos('field-debt-amount',         false);
+    pos('field-down-payment',        false);
+    pos('field-option-purchase-price', false);
+
+  // Alquiler: [Moneda][Alquiler mensual]
+  } else if(op === 'Alquiler'){
+    pos('field-sale-price',          false);
+    pos('field-rent-price',          true,  'fprimary');
+    pos('field-debt-amount',         false);
+    pos('field-down-payment',        false);
+    pos('field-option-purchase-price', false);
+
+  // Venta y Alquiler: [Moneda][Precio de venta] / [Alquiler mensual] fila completa
+  } else if(op === 'Venta y Alquiler'){
+    pos('field-sale-price',          true,  'fprimary');
+    pos('field-rent-price',          true,  'fsec-full');
+    pos('field-debt-amount',         false);
+    pos('field-down-payment',        false);
+    pos('field-option-purchase-price', false);
+
+  // Venta cediendo deuda: [Moneda][Valor total] / [Deuda a asumir][Prima requerida]
+  } else if(op === 'Venta cediendo deuda'){
+    pos('field-sale-price',          true,  'fprimary');
+    pos('field-rent-price',          false);
+    pos('field-debt-amount',         true,  'fsec-left');
+    pos('field-down-payment',        true,  'fsec-right');
+    pos('field-option-purchase-price', false);
+
+  // Alquiler con opción: [Moneda][Alquiler mensual] / [Prima/opción][Precio de compra]
+  } else if(op === 'Alquiler con opción de compra'){
+    pos('field-sale-price',          false);
+    pos('field-rent-price',          true,  'fprimary');
+    pos('field-debt-amount',         false);
+    pos('field-down-payment',        true,  'fsec-left');
+    pos('field-option-purchase-price', true, 'fsec-right');
+  }
+
+  showEl('price-field', true);
   updateDerivedPropertyPrice();
 }
 function formatAdminListPrice(item, kind){
