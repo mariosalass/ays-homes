@@ -13,9 +13,10 @@ function fmtPrice(p) {
 function currency(c) { return c === '₡' ? 'CRC' : 'USD'; }
 
 export async function generateMetadata({ params }) {
+  const canonical = `https://www.ays.homes/vehiculo/${params.id}`;
   const sb = createSupabaseClient();
   const { data: item } = await sb.from('listings').select('title,description,photos,brand,model,year,currency,price').eq('id', params.id).single();
-  if (!item) return { title: 'Vehículo · AyS' };
+  if (!item) return { title: 'Vehículo · AyS', alternates: { canonical } };
 
   const model = item.title || item.brand || 'Vehículo';
   const title = `${item.brand ? item.brand + ' ' : ''}${model}${item.year ? ' ' + item.year : ''} en venta — ${item.currency || '$'}${fmtPrice(item.price)} | AyS`;
@@ -26,7 +27,8 @@ export async function generateMetadata({ params }) {
   return {
     title,
     description: desc,
-    openGraph: { title, description: desc, images: img ? [{ url: img }] : [], type: 'website', siteName: 'AyS Soluciones Comerciales' },
+    alternates: { canonical },
+    openGraph: { title, description: desc, url: `https://www.ays.homes/vehiculo/${params.id}`, images: img ? [{ url: img }] : [], type: 'website', siteName: 'AyS Soluciones Comerciales' },
     twitter: { card: 'summary_large_image', title, description: desc, images: img ? [img] : [] },
   };
 }

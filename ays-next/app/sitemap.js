@@ -11,7 +11,7 @@ export default async function sitemap() {
     );
     const { data } = await sb.from('listings').select('id, kind, updated_at');
     listings = (data || []).map((item) => ({
-      url: `https://ays.homes/${ROUTE[item.kind] || 'propiedad'}/${item.id}`,
+      url: `https://www.ays.homes/${ROUTE[item.kind] || 'propiedad'}/${item.id}`,
       lastModified: item.updated_at,
       changeFrequency: 'weekly',
       priority: 0.8,
@@ -19,14 +19,14 @@ export default async function sitemap() {
   } catch {}
 
   return [
-    { url: 'https://ays.homes',             priority: 1.0 },
-    { url: 'https://ays.homes/propiedades',  priority: 0.9 },
-    { url: 'https://ays.homes/autos',        priority: 0.7 },
-    { url: 'https://ays.homes/negocios',     priority: 0.8 },
-    { url: 'https://ays.homes/nosotros',     priority: 0.5 },
-    { url: 'https://ays.homes/creditos',     priority: 0.6 },
-    { url: 'https://ays.homes/gestion',      priority: 0.6 },
-    { url: 'https://ays.homes/contacto',     priority: 0.5 },
+    { url: 'https://www.ays.homes',             priority: 1.0 },
+    { url: 'https://www.ays.homes/propiedades',  priority: 0.9 },
+    { url: 'https://www.ays.homes/autos',        priority: 0.7 },
+    { url: 'https://www.ays.homes/negocios',     priority: 0.8 },
+    { url: 'https://www.ays.homes/nosotros',     priority: 0.5 },
+    { url: 'https://www.ays.homes/creditos',     priority: 0.6 },
+    { url: 'https://www.ays.homes/gestion',      priority: 0.6 },
+    { url: 'https://www.ays.homes/contacto',     priority: 0.5 },
     ...listings,
   ];
 }

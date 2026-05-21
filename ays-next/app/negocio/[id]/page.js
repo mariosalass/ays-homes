@@ -15,9 +15,10 @@ function currency(c) {
 }
 
 export async function generateMetadata({ params }) {
+  const canonical = `https://www.ays.homes/negocio/${params.id}`;
   const sb = createSupabaseClient();
   const { data: item } = await sb.from('listings').select('title,description,photos,sector,business_type,operation,location,currency,price').eq('id', params.id).single();
-  if (!item) return { title: 'Negocio · AyS' };
+  if (!item) return { title: 'Negocio · AyS', alternates: { canonical } };
 
   const typeLabel = item.business_type || item.sector || 'Negocio';
   const loc = item.location ? ` en ${item.location}` : '';
@@ -30,7 +31,8 @@ export async function generateMetadata({ params }) {
   return {
     title,
     description: desc,
-    openGraph: { title, description: desc, images: img ? [{ url: img }] : [], type: 'website', siteName: 'AyS Soluciones Comerciales' },
+    alternates: { canonical },
+    openGraph: { title, description: desc, url: `https://www.ays.homes/negocio/${params.id}`, images: img ? [{ url: img }] : [], type: 'website', siteName: 'AyS Soluciones Comerciales' },
     twitter: { card: 'summary_large_image', title, description: desc, images: img ? [img] : [] },
   };
 }

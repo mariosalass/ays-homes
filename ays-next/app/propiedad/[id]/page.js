@@ -25,9 +25,10 @@ function isSaleAndRent(item) {
 function currency(c) { return c === '₡' ? 'CRC' : 'USD'; }
 
 export async function generateMetadata({ params }) {
+  const canonical = `https://www.ays.homes/propiedad/${params.id}`;
   const sb = createSupabaseClient();
   const { data: item } = await sb.from('listings').select('title,description,photos,prop_type,operation,operation_type,location,currency,price,sale_price,rent_price,provincia,canton,distrito').eq('id', params.id).single();
-  if (!item) return { title: 'Propiedad · AyS' };
+  if (!item) return { title: 'Propiedad · AyS', alternates: { canonical } };
 
   const loc = [item.distrito, item.canton, item.provincia].filter(Boolean).join(', ') || item.location || 'Costa Rica';
   const op = operationType(item);
@@ -39,7 +40,8 @@ export async function generateMetadata({ params }) {
   return {
     title,
     description: desc,
-    openGraph: { title, description: desc, images: img ? [{ url: img }] : [], type: 'website', siteName: 'AyS Soluciones Comerciales' },
+    alternates: { canonical },
+    openGraph: { title, description: desc, url: `https://www.ays.homes/propiedad/${params.id}`, images: img ? [{ url: img }] : [], type: 'website', siteName: 'AyS Soluciones Comerciales' },
     twitter: { card: 'summary_large_image', title, description: desc, images: img ? [img] : [] },
   };
 }
