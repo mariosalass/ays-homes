@@ -27,7 +27,7 @@ var CR_LOCATIONS = {
   "Alajuela": {
     lat: 10.0162, lng: -84.2147,
     cantones: {
-      "Alajuela": { lat: 10.0162, lng: -84.2147, distritos: ["Alajuela","San José","Carrizal","San Antonio","Guácimo","San Isidro","Sabanilla","San Rafael","Río Segundo","Desamparados","Turrúcares","Tambor","Garita","Sarapiquí"] },
+      "Alajuela": { lat: 10.0162, lng: -84.2147, distritos: ["Alajuela","San José","Carrizal","San Antonio","Guácima","San Isidro","Sabanilla","San Rafael","Río Segundo","Desamparados","Turrúcares","Tambor","Garita","Sarapiquí"] },
       "San Ramón": { lat: 10.0897, lng: -84.4711, distritos: ["San Ramón","Santiago","San Juan","Piedades Norte","Piedades Sur","San Rafael","San Isidro","Ángeles","Alfaro","Volio","Concepción","Zapotal","Peñas Blancas","San Lorenzo"] },
       "Grecia": { lat: 10.0694, lng: -84.3178, distritos: ["Grecia","San Isidro","San José","San Roque","Tacares","Río Cuarto","Puente de Piedra","Bolivar"] },
       "San Mateo": { lat: 9.9797, lng: -84.5089, distritos: ["San Mateo","Desmonte","Jesús María","Labrador"] },
