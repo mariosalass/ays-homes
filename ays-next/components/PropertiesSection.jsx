@@ -86,7 +86,7 @@ export default function PropertiesSection({ properties }) {
               <label>Tipo</label>
               <select value={type} onChange={(e) => setType(e.target.value)}>
                 <option>Todas</option><option>Casa</option><option>Apartamento</option>
-                <option>Local</option><option>Terreno</option><option>Oficina</option>
+                <option>Edificio</option><option>Local</option><option>Terreno</option><option>Oficina</option>
               </select>
             </div>
             <div className="fg">
