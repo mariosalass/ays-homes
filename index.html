@@ -196,9 +196,16 @@ footer ul li a:hover{color:#fff}
 /* PROP CARD */
 .pcard{background:#fff;border-radius:16px;overflow:hidden;border:1px solid var(--border);transition:transform .25s,box-shadow .25s}
 .pcard:hover{transform:translateY(-5px);box-shadow:var(--sh-md);border-color:transparent}
+.pcard.unavailable{pointer-events:none}
+.pcard.unavailable:hover{transform:none;box-shadow:none;border-color:var(--border)}
 .pimg{position:relative;height:230px;overflow:hidden;cursor:pointer}
 .pimg img{width:100%;height:100%;object-fit:cover;transition:transform .45s ease}
 .pcard:hover .pimg img{transform:scale(1.06)}
+.pcard.unavailable .pimg{cursor:default}
+.pcard.unavailable .pimg img{opacity:.5}
+.pcard.unavailable:hover .pimg img{transform:none}
+.pcard.unavailable .pbody{opacity:.65}
+.unavailable-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#dc2626;font-size:18px;font-weight:800;letter-spacing:1px;text-align:center;background:rgba(255,255,255,.18);pointer-events:none}
 .gal-badge{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);color:#fff;font-size:13px;font-weight:600;padding:5px 11px;border-radius:7px;display:flex;align-items:center;gap:6px;pointer-events:none}
 .pbadges{position:absolute;top:10px;left:10px;display:flex;gap:6px}
 .badge{padding:5px 12px;border-radius:7px;font-size:12px;font-weight:700;letter-spacing:.3px}
@@ -602,7 +609,7 @@ footer ul li a:hover{color:#fff}
     </div>
     <div class="filter-panel" id="fpanel-props">
       <div class="fg-grid">
-        <div class="fg"><label>Transacción</label><select id="f-prop-op" onchange="applyPropFilters()"><option>Todas</option><option>Venta</option><option>Alquiler</option></select></div>
+        <div class="fg"><label>Transacción</label><select id="f-prop-op" onchange="applyPropFilters()"><option>Todas</option><option>Venta</option><option>Alquiler</option><option>Venta y Alquiler</option><option>Alquiler con opción de compra</option><option>Venta cediendo deuda</option></select></div>
         <div class="fg"><label>Tipo</label><select id="f-prop-type" onchange="applyPropFilters()"><option>Todas</option><option>Casa</option><option>Apartamento</option><option>Local</option><option>Terreno</option></select></div>
         <div class="fg"><label>Provincia</label><select id="f-prop-provincia" onchange="onFilterProvinciaChange(); applyPropFilters()"><option value="">Todas</option></select></div>
         <div class="fg"><label>Cantón</label><select id="f-prop-canton" onchange="applyPropFilters()" disabled><option value="">Todos</option></select></div>
@@ -851,9 +858,14 @@ function renderPropCard(item){
   if(item.parking) specs += '<span class="pspec"><i class="fas fa-car"></i> '+item.parking+'</span>';
   var priceStr = (item.currency||'$')+fmtPrice(item.price)+(item.operation==='Alquiler'?'<span>/mes</span>':'');
   var photosSafe = JSON.stringify(photos).replace(/'/g,"\\'");
-  return '<div class="pcard">'+
-    '<div class="pimg" onclick=\'openLbArr(event,'+photosSafe+',0)\'>' +
+  var isUnavailable = item.available === false;
+  var cardClass = isUnavailable ? 'pcard unavailable' : 'pcard';
+  var imageClickAttr = isUnavailable ? '' : ' onclick=\'openLbArr(event,'+photosSafe+',0)\'';
+  var unavailableOverlay = isUnavailable ? '<div class="unavailable-overlay">NO DISPONIBLE</div>' : '';
+  return '<div class="'+cardClass+'">'+
+    '<div class="pimg"'+imageClickAttr+'>' +
       '<img src="'+escH(img)+'" loading="lazy" alt="">'+
+      unavailableOverlay+
       '<div class="pbadges">'+
         '<span class="badge '+opClass+'">'+escH(item.operation||'Venta')+'</span>'+
         (item.featured?'<span class="badge b-feat">Destacado</span>':'')+
@@ -867,8 +879,8 @@ function renderPropCard(item){
       '<p class="pprice">'+priceStr+'</p>'+
       (specs?'<div class="pspecs">'+specs+'</div>':'')+
       '<div class="pacts">'+
-        '<button class="btn-view" onclick="openDetail(\''+item.id+'\',\'property\')">Ver detalles</button>'+
-        '<button class="btn-save"><i class="far fa-bookmark"></i></button>'+
+        (isUnavailable?'<button class="btn-view" disabled>Ver detalles</button>':'<button class="btn-view" onclick="openDetail(\''+item.id+'\',\'property\')">Ver detalles</button>')+
+        (isUnavailable?'<button class="btn-save" disabled><i class="far fa-bookmark"></i></button>':'<button class="btn-save"><i class="far fa-bookmark"></i></button>')+
       '</div>'+
     '</div>'+
   '</div>';
@@ -878,9 +890,14 @@ function renderCarCard(item){
   var photos = item.photos||[];
   var img = photos.length ? photos[0] : 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=700&q=80';
   var photosSafe = JSON.stringify(photos).replace(/'/g,"\\'");
-  return '<div class="pcard">'+
-    '<div class="pimg" onclick=\'openLbArr(event,'+photosSafe+',0)\'>'+
+  var isUnavailable = item.available === false;
+  var cardClass = isUnavailable ? 'pcard unavailable' : 'pcard';
+  var imageClickAttr = isUnavailable ? '' : ' onclick=\'openLbArr(event,'+photosSafe+',0)\'';
+  var unavailableOverlay = isUnavailable ? '<div class="unavailable-overlay">NO DISPONIBLE</div>' : '';
+  return '<div class="'+cardClass+'">'+
+    '<div class="pimg"'+imageClickAttr+'>'+
       '<img src="'+escH(img)+'" loading="lazy" alt="">'+
+      unavailableOverlay+
       '<div class="pbadges">'+
         (item.year?'<span class="badge b-yr">'+escH(item.year)+'</span>':'')+
         (item.featured?'<span class="badge b-feat">Destacado</span>':'')+
@@ -898,8 +915,8 @@ function renderCarCard(item){
         (item.fuel?'<span class="pspec"><i class="fas fa-gas-pump"></i> '+escH(item.fuel)+'</span>':'')+
       '</div>'+
       '<div class="pacts" style="margin-top:1rem">'+
-        '<button class="btn-view" onclick="openDetail(\''+item.id+'\',\'car\')">Ver detalles</button>'+
-        '<button class="btn-save"><i class="far fa-bookmark"></i></button>'+
+        (isUnavailable?'<button class="btn-view" disabled>Ver detalles</button>':'<button class="btn-view" onclick="openDetail(\''+item.id+'\',\'car\')">Ver detalles</button>')+
+        (isUnavailable?'<button class="btn-save" disabled><i class="far fa-bookmark"></i></button>':'<button class="btn-save"><i class="far fa-bookmark"></i></button>')+
       '</div>'+
     '</div>'+
   '</div>';
@@ -1155,8 +1172,9 @@ function applyPropFilters(){
   var filterCanton = document.getElementById('f-prop-canton') ? document.getElementById('f-prop-canton').value : '';
 
   var filtered = allPropsData.filter(function(item){
+    var itemOp = item.operation_type || item.operation || 'Venta';
     if(search && !(item.title||'').toLowerCase().includes(search) && !(item.location||'').toLowerCase().includes(search)) return false;
-    if(op !== 'Todas' && item.operation !== op) return false;
+    if(op !== 'Todas' && itemOp !== op) return false;
     if(type !== 'Todas' && item.prop_type !== type) return false;
     if(filterProv && item.provincia !== filterProv) return false;
     if(filterCanton && item.canton !== filterCanton) return false;

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>AyS - Préstamos con Garantía Hipotecaria</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --navy-deep: #0c2436;
+    --navy-mid: #133650;
+    --teal-glow: #1c4a63;
+    --gold: #e3a542;
+    --gold-soft: #f0c878;
+    --white: #ffffff;
+    --ice: #bcd2df;
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html,body{
+    width:1080px;
+    height:1920px;
+    overflow:hidden;
+    font-family:'Inter', sans-serif;
+    background:var(--navy-deep);
+  }
+
+  .story{
+    position:relative;
+    width:1080px;
+    height:1920px;
+    background:
+      radial-gradient(circle at 20% 8%, rgba(227,165,66,0.16), transparent 45%),
+      radial-gradient(circle at 85% 92%, rgba(28,74,99,0.55), transparent 50%),
+      linear-gradient(160deg, var(--navy-deep) 0%, var(--navy-mid) 55%, #0a1d2c 100%);
+    color:var(--white);
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    padding:96px 84px 88px;
+  }
+
+  /* subtle house line-art watermark, signature element */
+  .house-mark{
+    position:absolute;
+    right:-120px;
+    bottom:-60px;
+    width:780px;
+    height:780px;
+    opacity:0.08;
+    z-index:0;
+  }
+
+  .grain{
+    position:absolute;
+    inset:0;
+    background-image:radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px);
+    background-size:3px 3px;
+    pointer-events:none;
+  }
+
+  /* top: brand */
+  .brand{
+    position:relative;
+    z-index:2;
+    display:flex;
+    align-items:center;
+    gap:20px;
+  }
+  .brand-badge{
+    width:76px; height:76px;
+    border-radius:20px;
+    background:linear-gradient(135deg, var(--gold), #c78327);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Poppins', sans-serif;
+    font-weight:800;
+    font-size:30px;
+    color:var(--navy-deep);
+    box-shadow:0 8px 24px rgba(0,0,0,0.35);
+  }
+  .brand-text .name{
+    font-family:'Poppins', sans-serif;
+    font-weight:700;
+    font-size:34px;
+    line-height:1;
+  }
+  .brand-text .sub{
+    margin-top:6px;
+    font-size:20px;
+    color:var(--ice);
+    letter-spacing:0.3px;
+  }
+
+  /* middle: headline block */
+  .content{
+    position:relative;
+    z-index:2;
+  }
+
+  .eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 26px;
+    border:1px solid rgba(227,165,66,0.45);
+    border-radius:999px;
+    background:rgba(227,165,66,0.08);
+    font-size:22px;
+    font-weight:600;
+    color:var(--gold-soft);
+    letter-spacing:0.5px;
+    margin-bottom:44px;
+  }
+  .eyebrow .dot{
+    width:9px; height:9px;
+    border-radius:50%;
+    background:var(--gold);
+    box-shadow:0 0 12px var(--gold);
+  }
+
+  h1{
+    font-family:'Poppins', sans-serif;
+    font-weight:800;
+    font-size:80px;
+    line-height:1.04;
+    letter-spacing:-1.5px;
+    text-transform:uppercase;
+  }
+  h1 .accent{
+    color:var(--gold);
+  }
+
+  .rule{
+    width:120px;
+    height:6px;
+    background:var(--gold);
+    border-radius:4px;
+    margin:48px 0 52px;
+  }
+
+  .bullets{
+    display:flex;
+    flex-direction:column;
+    gap:34px;
+  }
+  .bullet{
+    display:flex;
+    align-items:flex-start;
+    gap:24px;
+  }
+  .bullet .icon{
+    flex:0 0 auto;
+    width:52px; height:52px;
+    border-radius:16px;
+    background:rgba(227,165,66,0.14);
+    border:1px solid rgba(227,165,66,0.4);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .bullet .icon svg{ width:26px; height:26px; }
+  .bullet p{
+    font-size:34px;
+    font-weight:500;
+    line-height:1.28;
+    padding-top:8px;
+    color:var(--white);
+  }
+  .bullet p strong{
+    font-weight:700;
+    color:var(--gold-soft);
+  }
+
+  /* bottom: CTA */
+  .footer{
+    position:relative;
+    z-index:2;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:28px;
+  }
+  .cta{
+    width:100%;
+    text-align:center;
+    padding:34px 0;
+    border-radius:20px;
+    background:linear-gradient(135deg, var(--gold), #c78327);
+    color:var(--navy-deep);
+    font-family:'Poppins', sans-serif;
+    font-weight:800;
+    font-size:38px;
+    letter-spacing:0.3px;
+    box-shadow:0 14px 34px rgba(0,0,0,0.4);
+  }
+  .swipe{
+    font-size:22px;
+    color:var(--ice);
+    letter-spacing:1px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+</style>
+</head>
+<body>
+  <div class="story">
+    <div class="grain"></div>
+
+    <!-- signature line-art house -->
+    <svg class="house-mark" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M40 220 L200 90 L360 220" stroke="#e3a542" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M70 200 V340 H330 V200" stroke="#e3a542" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="150" y="250" width="60" height="90" stroke="#e3a542" stroke-width="4"/>
+      <rect x="100" y="230" width="40" height="40" stroke="#e3a542" stroke-width="3"/>
+      <rect x="260" y="230" width="40" height="40" stroke="#e3a542" stroke-width="3"/>
+    </svg>
+
+    <!-- brand -->
+    <div class="brand">
+      <div class="brand-badge">AyS</div>
+      <div class="brand-text">
+        <div class="name">AyS Soluciones Comerciales</div>
+        <div class="sub">Adrián Salas &amp; Susy Bazo · Agentes Inmobiliarios</div>
+      </div>
+    </div>
+
+    <!-- content -->
+    <div class="content">
+      <div class="eyebrow"><span class="dot"></span>PRÉSTAMOS CON RESPALDO</div>
+      <h1>Préstamos con<br>garantía<br><span class="accent">hipotecaria</span></h1>
+      <div class="rule"></div>
+
+      <div class="bullets">
+        <div class="bullet">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#e3a542" stroke-width="2" stroke-linecap="round"><path d="M12 2 2 9h3v12h6v-7h2v7h6V9h3z"/></svg>
+          </div>
+          <p>Hasta el <strong>50% del valor</strong> de tu propiedad</p>
+        </div>
+        <div class="bullet">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#e3a542" stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </div>
+          <p>Se omiten <strong>manchas y reportes</strong> negativos</p>
+        </div>
+        <div class="bullet">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#e3a542" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+          </div>
+          <p><strong>Inversionistas privados</strong>, respuesta rápida</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- footer -->
+    <div class="footer">
+      <div class="cta">Consultá sin compromiso →</div>
+      <div class="swipe">DESLIZÁ PARA ESCRIBIRNOS</div>
+    </div>
+  </div>
+</body>
+</html>

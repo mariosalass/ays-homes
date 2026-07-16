@@ -30,11 +30,19 @@ export default function PropCard({ item }) {
   const salePrice = hasValue(item.sale_price) ? item.sale_price : item.price;
   const rentPrice = item.rent_price;
   const opClass = operation.indexOf('Alquiler') === 0 ? 'b-rent' : 'b-sale';
+  const isUnavailable = item.available === false;
 
   return (
-    <div className="pcard" onClick={() => router.push(href)} style={{ cursor: 'pointer' }}>
+    <div
+      className={`pcard${isUnavailable ? ' unavailable' : ''}`}
+      onClick={() => {
+        if (!isUnavailable) router.push(href);
+      }}
+      style={{ cursor: isUnavailable ? 'default' : 'pointer' }}
+    >
       <div className="pimg">
         <img src={img} width="700" height="460" loading="lazy" decoding="async" alt={item.title || ''} />
+        {isUnavailable && <div className="unavailable-overlay">NO DISPONIBLE</div>}
         <div className="pbadges">
           <span className={`badge ${opClass}`}>{isSaleRent ? 'Alquiler y/o Venta' : operation}</span>
           {item.featured && <span className="badge b-feat">Destacado</span>}
@@ -79,6 +87,7 @@ export default function PropCard({ item }) {
           <button
             className="btn-save"
             title="Guardar"
+            disabled={isUnavailable}
             onClick={(e) => e.stopPropagation()}
           >
             <i className="far fa-bookmark" />

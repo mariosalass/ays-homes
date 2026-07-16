@@ -12,11 +12,19 @@ export default function CarCard({ item }) {
   const href = `/vehiculo/${item.id}`;
   const photos = item.photos || [];
   const img = photos[0] || 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=700&q=80';
+  const isUnavailable = item.available === false;
 
   return (
-    <div className="pcard" onClick={() => router.push(href)} style={{ cursor: 'pointer' }}>
+    <div
+      className={`pcard${isUnavailable ? ' unavailable' : ''}`}
+      onClick={() => {
+        if (!isUnavailable) router.push(href);
+      }}
+      style={{ cursor: isUnavailable ? 'default' : 'pointer' }}
+    >
       <div className="pimg">
         <img src={img} width="700" height="460" loading="lazy" decoding="async" alt={item.title || ''} />
+        {isUnavailable && <div className="unavailable-overlay">NO DISPONIBLE</div>}
         <div className="pbadges">
           {item.year     && <span className="badge b-yr">{item.year}</span>}
           {item.featured && <span className="badge b-feat">Destacado</span>}
@@ -42,6 +50,7 @@ export default function CarCard({ item }) {
           <button
             className="btn-save"
             title="Guardar"
+            disabled={isUnavailable}
             onClick={(e) => e.stopPropagation()}
           >
             <i className="far fa-bookmark" />
