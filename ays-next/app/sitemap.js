@@ -1,15 +1,11 @@
-import { createClient } from '@supabase/supabase-js';
+import { getSitemapListings } from '@/lib/listings';
 
 const ROUTE = { property: 'propiedad', car: 'vehiculo', business: 'negocio' };
 
 export default async function sitemap() {
   let listings = [];
   try {
-    const sb = createClient(
-      process.env.NEXT_PUBLIC_SB_URL,
-      process.env.NEXT_PUBLIC_SB_KEY
-    );
-    const { data } = await sb.from('listings').select('id, kind, updated_at');
+    const data = await getSitemapListings();
     listings = (data || []).map((item) => ({
       url: `https://www.ays.homes/${ROUTE[item.kind] || 'propiedad'}/${item.id}`,
       lastModified: item.updated_at,

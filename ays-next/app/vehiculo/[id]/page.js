@@ -1,6 +1,6 @@
 export const revalidate = 0;
 
-import { createSupabaseClient } from '@/lib/supabase';
+import { getListingById } from '@/lib/listings';
 import PageLayout from '@/components/PageLayout';
 import Lightbox from '@/components/Lightbox';
 import DetailContactForm from '@/components/DetailContactForm';
@@ -14,8 +14,7 @@ function currency(c) { return c === '₡' ? 'CRC' : 'USD'; }
 
 export async function generateMetadata({ params }) {
   const canonical = `https://www.ays.homes/vehiculo/${params.id}`;
-  const sb = createSupabaseClient();
-  const { data: item } = await sb.from('listings').select('title,description,photos,brand,model,year,currency,price').eq('id', params.id).single();
+  const item = await getListingById(params.id);
   if (!item) return { title: 'Vehículo · AyS', alternates: { canonical } };
 
   const model = item.title || item.brand || 'Vehículo';
@@ -34,8 +33,7 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function VehiculoPage({ params }) {
-  const sb = createSupabaseClient();
-  const { data: item } = await sb.from('listings').select('*').eq('id', params.id).single();
+  const item = await getListingById(params.id);
   if (!item) return (
     <PageLayout>
       <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1.2rem', textAlign: 'center', padding: '3rem' }}>

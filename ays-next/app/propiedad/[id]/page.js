@@ -1,6 +1,6 @@
 export const revalidate = 0;
 
-import { createSupabaseClient } from '@/lib/supabase';
+import { getListingById } from '@/lib/listings';
 import PageLayout from '@/components/PageLayout';
 import Lightbox from '@/components/Lightbox';
 import DetailContactForm from '@/components/DetailContactForm';
@@ -26,8 +26,7 @@ function currency(c) { return c === '₡' ? 'CRC' : 'USD'; }
 
 export async function generateMetadata({ params }) {
   const canonical = `https://www.ays.homes/propiedad/${params.id}`;
-  const sb = createSupabaseClient();
-  const { data: item } = await sb.from('listings').select('title,description,photos,prop_type,operation,operation_type,location,currency,price,sale_price,rent_price,provincia,canton,distrito').eq('id', params.id).single();
+  const item = await getListingById(params.id);
   if (!item) return { title: 'Propiedad · AyS', alternates: { canonical } };
 
   const loc = [item.distrito, item.canton, item.provincia].filter(Boolean).join(', ') || item.location || 'Costa Rica';
@@ -47,8 +46,7 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function PropiedadPage({ params }) {
-  const sb = createSupabaseClient();
-  const { data: item } = await sb.from('listings').select('*').eq('id', params.id).single();
+  const item = await getListingById(params.id);
   if (!item) return (
     <PageLayout>
       <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1.2rem', textAlign: 'center', padding: '3rem' }}>
