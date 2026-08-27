@@ -3,17 +3,16 @@ import PageLayout from '@/components/PageLayout';
 import PropCard from '@/components/PropCard';
 import CarCard from '@/components/CarCard';
 import BusinessCard from '@/components/BusinessCard';
-import { createSupabaseClient } from '@/lib/supabase';
+import { getListingsByKind } from '@/lib/listings';
 
 const WA = 'https://wa.me/50685725465';
 
 async function getFeatured() {
   try {
-    const sb = createSupabaseClient();
-    const [{ data: allProps }, { data: allCars }, { data: allBiz }] = await Promise.all([
-      sb.from('listings').select('*').eq('kind', 'property').order('created_at', { ascending: false }).limit(9),
-      sb.from('listings').select('*').eq('kind', 'car').order('created_at', { ascending: false }).limit(9),
-      sb.from('listings').select('*').eq('kind', 'business').order('created_at', { ascending: false }).limit(6),
+    const [allProps, allCars, allBiz] = await Promise.all([
+      getListingsByKind('property', 9),
+      getListingsByKind('car', 9),
+      getListingsByKind('business', 6),
     ]);
     const props = allProps || [];
     const cars  = allCars  || [];

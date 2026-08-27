@@ -1,6 +1,6 @@
 export const revalidate = 0;
 
-import { createSupabaseClient } from '@/lib/supabase';
+import { getListingById } from '@/lib/listings';
 import PageLayout from '@/components/PageLayout';
 import Lightbox from '@/components/Lightbox';
 import DetailContactForm from '@/components/DetailContactForm';
@@ -16,8 +16,7 @@ function currency(c) {
 
 export async function generateMetadata({ params }) {
   const canonical = `https://www.ays.homes/negocio/${params.id}`;
-  const sb = createSupabaseClient();
-  const { data: item } = await sb.from('listings').select('title,description,photos,sector,business_type,operation,location,currency,price').eq('id', params.id).single();
+  const item = await getListingById(params.id);
   if (!item) return { title: 'Negocio · AyS', alternates: { canonical } };
 
   const typeLabel = item.business_type || item.sector || 'Negocio';
@@ -38,8 +37,7 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function NegocioPage({ params }) {
-  const sb = createSupabaseClient();
-  const { data: item } = await sb.from('listings').select('*').eq('id', params.id).single();
+  const item = await getListingById(params.id);
   if (!item) return (
     <PageLayout>
       <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1.2rem', textAlign: 'center', padding: '3rem' }}>

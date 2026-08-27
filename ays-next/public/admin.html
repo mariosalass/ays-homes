@@ -6,10 +6,9 @@
 <title>AyS Admin · Panel de Publicaciones</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="cr-locations.js?v=20260525"></script>
+<script src="cr-locations.js?v=20260811"></script>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 html{font-size:16px;-webkit-text-size-adjust:100%}
@@ -458,8 +457,8 @@ body.preview-open{overflow:hidden}
   <div class="main">
     <!-- SETUP BANNER -->
     <div class="setup-banner" id="setup-banner" style="display:none">
-      <h3><i class="fas fa-triangle-exclamation"></i> Configuración pendiente</h3>
-      <p>Aún no has configurado Supabase. Andá a la pestaña <strong>Config</strong>, pegá tu URL y tu clave anónima, y guardá. Después todo funciona solo.</p>
+      <h3><i class="fas fa-triangle-exclamation"></i> Conexión no disponible</h3>
+      <p>No se pudo conectar con las APIs del panel. Revisá la configuración server-side de Neon y R2.</p>
     </div>
 
     <!-- PROPIEDADES TAB -->
@@ -498,22 +497,13 @@ body.preview-open{overflow:hidden}
     <!-- CONFIG TAB -->
     <div id="tab-config" style="display:none">
       <div class="config-card">
-        <h3><i class="fas fa-database"></i> Conexión Supabase</h3>
-        <div class="mf">
-          <label>URL de Supabase</label>
-          <input type="text" id="cfg-url" placeholder="https://xxxxx.supabase.co">
-          <p class="mf-hint">La encontrás en tu proyecto de Supabase → Settings → API</p>
-        </div>
-        <div class="mf">
-          <label>Clave anónima (anon key)</label>
-          <input type="text" id="cfg-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5c...">
-          <p class="mf-hint">Usá la clave <strong>anon public</strong>, no la service_role.</p>
-        </div>
-        <button class="btn-save-config" onclick="saveConfig()"><i class="fas fa-save"></i> Guardar configuración</button>
+        <h3><i class="fas fa-database"></i> Conexión segura</h3>
+        <p style="font-size:14px;color:var(--muted);line-height:1.65">El panel usa APIs server-side con Neon PostgreSQL y Cloudflare R2. Las credenciales no se guardan en este navegador.</p>
+        <button class="btn-save-config" onclick="loadAll()"><i class="fas fa-rotate"></i> Verificar conexión</button>
       </div>
       <div class="config-card">
         <h3><i class="fas fa-info-circle"></i> Cómo agregar fotos</h3>
-        <p style="font-size:14px;color:var(--muted);line-height:1.65">Al crear o editar una publicación, podés tocar el área de fotos y seleccionar imágenes directamente desde la galería de tu celular. Se suben automáticamente a Supabase Storage.</p>
+        <p style="font-size:14px;color:var(--muted);line-height:1.65">Al crear o editar una publicación, podés tocar el área de fotos y seleccionar imágenes directamente desde la galería de tu celular. Se suben automáticamente a Cloudflare R2.</p>
       </div>
     </div>
   </div>
@@ -865,52 +855,43 @@ body.preview-open{overflow:hidden}
 <div class="toast" id="toast"></div>
 
 <script>
-// ── CONFIG PERSISTENCE ──
-var CFG_KEY = 'ays_admin_config';
-function loadConfig(){
-  try{ return JSON.parse(localStorage.getItem(CFG_KEY)||'{}'); }catch(e){ return {}; }
-}
-function saveConfigData(d){ localStorage.setItem(CFG_KEY, JSON.stringify(d)); }
-
-// ── AUTH ──
-var DEFAULT_SB_URL = 'https://mlrglzzxrfvbkucrtffd.supabase.co';
-var DEFAULT_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1scmdsenp4cmZ2Ymt1Y3J0ZmZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5MDc1MTQsImV4cCI6MjA5MDQ4MzUxNH0.MI3N5PR3IkAYgBT1cHOQhxdQDcwziMWLzt3zjuLWTZM';
-var ALLOWED_ADMIN_EMAILS = [
-  'marioantonio228@gmail.com',
-  'asalasc3@gmail.com',
-  'susabazo@gmail.com'
-];
+// ── API CLIENT ──
 var currentUser = null;
 
-// ── SUPABASE CLIENT ──
-var sb = null;
-var sbConfigSig = '';
-function initSupabase(force){
-  var cfg = loadConfig();
-  var sbUrl = cfg.sbUrl || DEFAULT_SB_URL;
-  var sbKey = cfg.sbKey || DEFAULT_SB_KEY;
-  if(sbUrl && sbKey){
-    var sig = sbUrl+'|'+sbKey;
-    if(sb && sbConfigSig === sig && !force) return true;
-    sb = supabase.createClient(sbUrl, sbKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true
-      }
-    });
-    sbConfigSig = sig;
-    return true;
+function clearLegacyConfig(){
+  try{ localStorage.removeItem('ays_admin_config'); }catch(e){}
+}
+
+async function apiFetch(url, options){
+  options = options || {};
+  var fetchOptions = {
+    method: options.method || 'GET',
+    credentials: 'include',
+    headers: options.headers || {},
+  };
+
+  if(options.json !== undefined){
+    fetchOptions.headers = Object.assign({}, fetchOptions.headers, {'Content-Type':'application/json'});
+    fetchOptions.body = JSON.stringify(options.json);
+  } else if(options.body !== undefined){
+    fetchOptions.body = options.body;
   }
-  return false;
-}
 
-function adminEmail(user){
-  return user && user.email ? String(user.email).toLowerCase() : '';
-}
+  var res = await fetch(url, fetchOptions);
+  var data = null;
+  try{ data = await res.json(); }catch(e){ data = {}; }
 
-function isAllowedAdmin(user){
-  return ALLOWED_ADMIN_EMAILS.indexOf(adminEmail(user)) !== -1;
+  if(res.status === 401){
+    currentUser = null;
+    showLogin();
+    throw new Error('Sesión expirada');
+  }
+
+  if(!res.ok || (data && data.ok === false)){
+    throw new Error((data && data.error) || 'Error de conexión');
+  }
+
+  return data || {};
 }
 
 // ── STATE ──
@@ -952,28 +933,7 @@ function showApp(){
   initApp();
 }
 
-async function ensureAllowedSession(session, msg){
-  if(!session || !session.user){
-    currentUser = null;
-    showLogin();
-    return false;
-  }
-  if(!isAllowedAdmin(session.user)){
-    currentUser = null;
-    try{ await sb.auth.signOut(); }catch(e){}
-    showLogin(msg || 'Este usuario no tiene permiso para usar el admin.');
-    return false;
-  }
-  currentUser = session.user;
-  return true;
-}
-
 async function doLogin(){
-  if(!initSupabase()){
-    showLogin('No se pudo inicializar Supabase.');
-    return;
-  }
-
   var email = document.getElementById('email-input').value.trim().toLowerCase();
   var pwd = document.getElementById('pwd-input').value;
   if(!email || !pwd){
@@ -984,14 +944,11 @@ async function doLogin(){
   var btn = document.getElementById('btn-login');
   btn.disabled = true;
   try{
-    var res = await sb.auth.signInWithPassword({email: email, password: pwd});
-    if(res.error) throw res.error;
-    var ok = await ensureAllowedSession(res.data.session, 'Este usuario no tiene permiso para usar el admin.');
-    if(ok){
-      document.getElementById('login-err').style.display = 'none';
-      document.getElementById('pwd-input').value = '';
-      showApp();
-    }
+    var res = await apiFetch('/api/admin/auth/login', {method:'POST', json:{email: email, password: pwd}});
+    currentUser = res.user || {email: email};
+    document.getElementById('login-err').style.display = 'none';
+    document.getElementById('pwd-input').value = '';
+    showApp();
   } catch(e){
     showLogin('Email o contraseña incorrectos. Intentá de nuevo.');
     document.getElementById('email-input').focus();
@@ -1000,24 +957,19 @@ async function doLogin(){
 }
 
 async function bootstrapAuth(){
-  if(!initSupabase()){
-    showLogin('No se pudo inicializar Supabase.');
-    return;
-  }
-  var res = await sb.auth.getSession();
-  if(res.error || !res.data.session){
-    showLogin();
-    return;
-  }
-  var ok = await ensureAllowedSession(res.data.session, 'Este usuario no tiene permiso para usar el admin.');
-  if(ok){
+  clearLegacyConfig();
+  try{
+    var res = await apiFetch('/api/admin/auth/me');
+    currentUser = res.user || null;
     showApp();
+  }catch(e){
+    showLogin();
   }
 }
 
 document.getElementById('btn-logout').addEventListener('click', async function(){
   try{
-    if(sb) await sb.auth.signOut();
+    await apiFetch('/api/admin/auth/logout', {method:'POST'});
   } finally {
     currentUser = null;
     showLogin();
@@ -1027,17 +979,7 @@ document.getElementById('btn-logout').addEventListener('click', async function()
 
 // ── INIT APP ──
 function initApp(){
-  var cfg = loadConfig();
-  document.getElementById('cfg-url').value = cfg.sbUrl || DEFAULT_SB_URL || '';
-  document.getElementById('cfg-key').value = cfg.sbKey || DEFAULT_SB_KEY || '';
-
-  var ok = initSupabase();
-  if(!ok){
-    document.getElementById('setup-banner').style.display = 'block';
-    renderEmpty('props-list', 'building', 'Configurá Supabase en la pestaña Config para empezar.');
-    renderEmpty('cars-list', 'car', 'Configurá Supabase en la pestaña Config para empezar.');
-    return;
-  }
+  document.getElementById('setup-banner').style.display = 'none';
   loadAll();
 }
 
@@ -1060,11 +1002,9 @@ async function loadAll(){
 async function loadBiz(){
   var listEl = document.getElementById('biz-list');
   listEl.innerHTML = '<div class="loading"><div class="spinner"></div><p>Cargando...</p></div>';
-  if(!sb){ renderEmpty('biz-list','store','Configurá Supabase primero.'); return; }
   try{
-    var {data,error} = await sb.from('listings').select('*').eq('kind','business').order('created_at',{ascending:false});
-    if(error) throw error;
-    allBiz = data||[];
+    var res = await apiFetch('/api/admin/listings?kind=business');
+    allBiz = res.listings||[];
     document.getElementById('cnt-biz').textContent = allBiz.length;
     renderList('biz-list', allBiz, 'business');
   }catch(e){
@@ -1075,26 +1015,22 @@ async function loadBiz(){
 async function loadProps(){
   var listEl = document.getElementById('props-list');
   listEl.innerHTML = '<div class="loading"><div class="spinner"></div><p>Cargando...</p></div>';
-  if(!sb){ renderEmpty('props-list','building','Configurá Supabase primero.'); return; }
   try{
-    var {data,error} = await sb.from('listings').select('*').eq('kind','property').order('created_at',{ascending:false});
-    if(error) throw error;
-    allProps = data||[];
+    var res = await apiFetch('/api/admin/listings?kind=property');
+    allProps = res.listings||[];
     document.getElementById('cnt-props').textContent = allProps.length;
     renderList('props-list', allProps, 'property');
   }catch(e){
-    listEl.innerHTML = '<div class="empty"><i class="fas fa-circle-exclamation"></i><p>Error cargando propiedades. Verificá la configuración de Supabase.</p></div>';
+    listEl.innerHTML = '<div class="empty"><i class="fas fa-circle-exclamation"></i><p>Error cargando propiedades.</p></div>';
   }
 }
 
 async function loadCars(){
   var listEl = document.getElementById('cars-list');
   listEl.innerHTML = '<div class="loading"><div class="spinner"></div><p>Cargando...</p></div>';
-  if(!sb){ renderEmpty('cars-list','car','Configurá Supabase primero.'); return; }
   try{
-    var {data,error} = await sb.from('listings').select('*').eq('kind','car').order('created_at',{ascending:false});
-    if(error) throw error;
-    allCars = data||[];
+    var res = await apiFetch('/api/admin/listings?kind=car');
+    allCars = res.listings||[];
     document.getElementById('cnt-cars').textContent = allCars.length;
     renderList('cars-list', allCars, 'car');
   }catch(e){
@@ -1540,7 +1476,6 @@ function removePending(i){
 
 async function uploadPendingPhotos(){
   if(!pendingPhotos.length) return;
-  if(!sb) return;
   var prog = document.getElementById('upload-progress');
   var bar = document.getElementById('up-bar');
   var lbl = document.getElementById('up-label');
@@ -1549,13 +1484,11 @@ async function uploadPendingPhotos(){
     var p = pendingPhotos[i];
     lbl.textContent = 'Subiendo foto '+(i+1)+' de '+pendingPhotos.length+'...';
     bar.style.width = Math.round((i/pendingPhotos.length)*100)+'%';
-    var ext = p.file.name.split('.').pop() || 'jpg';
-    var fname = 'listing-'+(Date.now())+'-'+Math.random().toString(36).slice(2)+'.'+ext;
-    var {data,error} = await sb.storage.from('listing-photos').upload(fname, p.file, {contentType:p.file.type});
-    if(!error && data){
-      var pub = sb.storage.from('listing-photos').getPublicUrl(data.path);
-      if(pub && pub.data && pub.data.publicUrl) uploadedUrls.push(pub.data.publicUrl);
-    }
+    var form = new FormData();
+    form.append('file', p.file);
+    var res = await apiFetch('/api/admin/upload', {method:'POST', body: form});
+    var uploaded = res.files && res.files[0];
+    if(uploaded && uploaded.url) uploadedUrls.push(uploaded.url);
     bar.style.width = Math.round(((i+1)/pendingPhotos.length)*100)+'%';
   }
   pendingPhotos = [];
@@ -1589,8 +1522,6 @@ async function saveItem(){
   btn.innerHTML = '<div class="spinner" style="width:20px;height:20px;border-width:2px;margin:0"></div> Guardando...';
 
   try{
-    if(!sb) throw new Error('Supabase no configurado');
-
     await uploadPendingPhotos();
 
     var title = document.getElementById('f-title').value.trim();
@@ -1669,12 +1600,10 @@ async function saveItem(){
 
     var res;
     if(editingId){
-      res = await sb.from('listings').update(row).eq('id',editingId).select();
+      res = await apiFetch('/api/admin/listings/'+encodeURIComponent(editingId), {method:'PATCH', json: row});
     } else {
-      row.created_at = new Date().toISOString();
-      res = await sb.from('listings').insert([row]).select();
+      res = await apiFetch('/api/admin/listings', {method:'POST', json: row});
     }
-    if(res.error) throw res.error;
 
     showToast(editingId ? 'Publicación actualizada ✓' : 'Publicación creada ✓','ok');
     closeModal();
@@ -1699,13 +1628,15 @@ function confirmDelete(id, type){
   document.getElementById('confirm-overlay').classList.add('open');
   document.getElementById('btn-confirm-del').onclick = async function(){
     closeConfirm();
-    if(!sb){ showToast('Supabase no configurado','err'); return; }
-    var {error} = await sb.from('listings').delete().eq('id',id);
-    if(error){ showToast('Error al eliminar','err'); return; }
-    showToast('Eliminado ✓','ok');
-    if(type==='property') await loadProps();
-    else if(type==='business') await loadBiz();
-    else await loadCars();
+    try{
+      await apiFetch('/api/admin/listings/'+encodeURIComponent(id), {method:'DELETE'});
+      showToast('Eliminado ✓','ok');
+      if(type==='property') await loadProps();
+      else if(type==='business') await loadBiz();
+      else await loadCars();
+    }catch(e){
+      showToast('Error al eliminar','err');
+    }
   };
 }
 function closeConfirm(){
@@ -1726,9 +1657,12 @@ function syncFeaturedToggle(checked){
 
 // ── TOGGLE FEATURED ──
 async function toggleFeatured(btn, id, currentVal, kind){
-  if(!sb){ showToast('Supabase no configurado','err'); return; }
-  var {error} = await sb.from('listings').update({featured: !currentVal}).eq('id', id);
-  if(error){ showToast('Error al actualizar','err'); return; }
+  try{
+    await apiFetch('/api/admin/listings/'+encodeURIComponent(id)+'/featured', {method:'PATCH', json:{featured: !currentVal}});
+  }catch(e){
+    showToast('Error al actualizar','err');
+    return;
+  }
   var nowFeatured = !currentVal;
   btn.innerHTML = '<i class="fas fa-star"></i>';
   btn.setAttribute('title', nowFeatured ? 'Quitar destacado' : 'Destacar');
@@ -1743,10 +1677,12 @@ async function toggleFeatured(btn, id, currentVal, kind){
 
 // ── TOGGLE AVAILABLE ──
 async function toggleAvailable(btn, id, currentAvailable, kind){
-  if(!sb){ showToast('Supabase no configurado','err'); return; }
-  var item = { id: id };
-  var {error} = await sb.from('listings').update({ available: !currentAvailable }).eq('id', item.id);
-  if(error){ showToast('Error al actualizar','err'); return; }
+  try{
+    await apiFetch('/api/admin/listings/'+encodeURIComponent(id)+'/available', {method:'PATCH', json:{available: !currentAvailable}});
+  }catch(e){
+    showToast('Error al actualizar','err');
+    return;
+  }
   var nowAvailable = !currentAvailable;
   var availableLabel = nowAvailable ? 'Disponible' : 'No disponible';
   var availableIcon = nowAvailable ? '<i class="fas fa-circle-check"></i>' : '<i class="fas fa-circle-xmark"></i>';
@@ -1760,22 +1696,10 @@ async function toggleAvailable(btn, id, currentAvailable, kind){
 
 // ── CONFIG SAVE ──
 function saveConfig(){
-  var url = document.getElementById('cfg-url').value.trim();
-  var key = document.getElementById('cfg-key').value.trim();
-  var cfg = loadConfig();
-  if(url) cfg.sbUrl = url;
-  if(key) cfg.sbKey = key;
-  if(cfg.adminPwd) delete cfg.adminPwd;
-  saveConfigData(cfg);
-  var ok = initSupabase(true);
-  if(ok){
-    document.getElementById('setup-banner').style.display = 'none';
-    loadAll();
-    showToast('Configuración guardada ✓','ok');
-    switchTab('propiedades');
-  } else {
-    showToast('Guardado. Faltan URL o clave de Supabase.','err');
-  }
+  clearLegacyConfig();
+  loadAll();
+  showToast('Conexión verificada ✓','ok');
+  switchTab('propiedades');
 }
 
 // ── TOAST ──
@@ -1974,7 +1898,7 @@ function fmtPrice(p){
   return n.toLocaleString('es-CR');
 }
 
-// Restaurar sesión real de Supabase si existe
+// Restaurar sesión del admin si existe
 bootstrapAuth();
 </script>
 </body>

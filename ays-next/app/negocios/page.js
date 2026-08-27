@@ -1,6 +1,6 @@
 import PageLayout from '@/components/PageLayout';
 import BusinessCard from '@/components/BusinessCard';
-import { createSupabaseClient } from '@/lib/supabase';
+import { getListingsByKind } from '@/lib/listings';
 
 export const revalidate = 0;
 
@@ -12,9 +12,7 @@ export const metadata = {
 export default async function NegociosPage() {
   let businesses = [];
   try {
-    const sb = createSupabaseClient();
-    const { data } = await sb.from('listings').select('*').eq('kind', 'business').order('created_at', { ascending: false });
-    businesses = data || [];
+    businesses = await getListingsByKind('business');
   } catch {}
 
   return (

@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 import { notFound } from 'next/navigation';
-import { createSupabaseClient } from '@/lib/supabase';
+import { getListingById } from '@/lib/listings';
 import Lightbox from '@/components/Lightbox';
 import DetailContactForm from '@/components/DetailContactForm';
 
@@ -92,8 +92,7 @@ function typeLabel(item) {
 export async function generateMetadata({ params, searchParams }) {
   const mode = searchParams?.mode || 'client';
   const isBroker = mode === 'broker';
-  const sb = createSupabaseClient();
-  const { data: item } = await sb.from('listings').select('title,description,photos,prop_type,operation,operation_type,available_operations,location,currency,price,sale_price,rent_price,debt_amount,down_payment,option_purchase_price,finance_notes,kind,brand,year,sector,business_type,income_approx,sale_reason,includes,provincia,canton,distrito').eq('id', params.id).single();
+  const item = await getListingById(params.id);
   if (!item) return { title: 'Ficha Técnica' };
 
   console.log('[og:image debug] ficha', params.id, '| campos:', Object.keys(item), '| photos:', item.photos);
@@ -125,8 +124,7 @@ export default async function FichaPage({ params, searchParams }) {
   const mode = searchParams?.mode || 'client';
   const isBroker = mode === 'broker';
 
-  const sb = createSupabaseClient();
-  const { data: item } = await sb.from('listings').select('*').eq('id', params.id).single();
+  const item = await getListingById(params.id);
   if (!item) notFound();
 
   const photos = item.photos || [];
