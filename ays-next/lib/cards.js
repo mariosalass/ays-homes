@@ -10,7 +10,7 @@ export const CARDS = {
     company: 'AyS Soluciones Comerciales',
     photo: '/adrianfoto.jpg',
     phone: '+50683215948',
-    phoneDisplay: '+50683215948d',
+    phoneDisplay: '+506 8321-5948',
     email: 'info@ays.homes',
     bio: 'Te acompaño a comprar, vender o alquilar tu propiedad en Costa Rica, con trato cercano y transparente.',
   },
