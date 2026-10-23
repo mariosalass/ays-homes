@@ -4,7 +4,7 @@
 export const SITE_URL = 'https://www.ays.homes';
 
 export const CARDS = {
-  'adrian-salas-7h3k9': {
+  'adrian-salas': {
     name: 'Adrián Salas',
     role: 'Agente Inmobiliario',
     company: 'AyS Soluciones Comerciales',
@@ -14,7 +14,7 @@ export const CARDS = {
     email: 'info@ays.homes',
     bio: 'Te acompaño a comprar, vender o alquilar tu propiedad en Costa Rica, con trato cercano y transparente.',
   },
-  'susy-bazo-4m8q2': {
+  'susy-bazo': {
     name: 'Susy Bazo',
     role: 'Agente Inmobiliaria',
     company: 'AyS Soluciones Comerciales',
